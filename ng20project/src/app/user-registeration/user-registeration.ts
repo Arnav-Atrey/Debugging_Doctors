@@ -1,5 +1,5 @@
 import { Component, ViewChild, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { AbstractControl, ValidationErrors, FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { UserService } from '../services/userservices';
@@ -27,6 +27,26 @@ export class UserRegisteration {
     private router: Router
   ) { }
 
+  // Custom validator to prevent @swasthatech.com for patients
+  swasthatechDomainValidator(control: AbstractControl): ValidationErrors | null {
+    if (!control.value) {
+      return null;
+    }
+
+    const email = control.value.toLowerCase();
+    const formGroup = control.parent;
+    
+    if (formGroup) {
+      const role = formGroup.get('role')?.value;
+      
+      if (role === 'Patient' && email.endsWith('@swasthatech.com')) {
+        return { swasthatechDomain: true };
+      }
+    }
+    
+    return null;
+  }
+
   ngOnInit(): void {
     this.registrationForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -38,6 +58,10 @@ export class UserRegisteration {
       confirmPassword: ['', Validators.required],
       role: ['', Validators.required]
     }, { validators: [this.passwordsMatchValidator, this.doctorEmailDomainValidator] });
+    // Re-validate email when role changes
+    this.registrationForm.get('role')?.valueChanges.subscribe(() => {
+      this.registrationForm.get('email')?.updateValueAndValidity();
+    });
   }
 
   onCaptchaValidated(isValid: boolean): void {
@@ -124,7 +148,10 @@ export class UserRegisteration {
       },
       error: (error) => {
         this.successMessage = '';
-        this.errorMessage = error.error || 'Registration failed. Please try again.';
+        console.error('Registration error:', error);
+        this.errorMessage = error.error?.message || 'Registration failed. Please try again.';
+        this.isCaptchaValid = false;
+        this.captchaComponent.refreshCaptcha();
       }
     });
   }

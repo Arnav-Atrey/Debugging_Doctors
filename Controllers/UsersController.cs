@@ -97,7 +97,7 @@ namespace Hospital_Management_system.Controllers
 
         // POST: api/Users/login
         [HttpPost("login")]
-        public async Task<ActionResult<UserDto>> Login(UserLoginDto loginDto)
+        public async Task<ActionResult<LoginResponseDto>> Login(UserLoginDto loginDto)
         {
             // Find user by email
             var user = await _context.Users
@@ -105,17 +105,17 @@ namespace Hospital_Management_system.Controllers
 
             if (user == null)
             {
-                return Unauthorized("Invalid email or password.");
+                return NotFound(new { message = "This email is not registered. Please check your email or register for a new account." });
             }
 
             // Compute hash of provided password and compare with stored hash
             string hashedInputPassword = ComputeSHA256Hash(loginDto.PswdHash);
             if (hashedInputPassword != user.PswdHash)
             {
-                return Unauthorized("Invalid email or password.");
+                return Unauthorized(new { message = "Invalid password. Please try again." });
             }
 
-            // Create response based on role
+            // Create response
             var response = new LoginResponseDto
             {
                 UserId = user.UserId,
@@ -123,20 +123,8 @@ namespace Hospital_Management_system.Controllers
                 Role = user.Role
             };
 
-            // If user is a Doctor, get DocID
-            if (user.Role == "Doctor")
-            {
-                var doctor = await _context.Doctors
-                    .FirstOrDefaultAsync(d => d.UserId == user.UserId);
-
-                if (doctor != null)
-                {
-                    response.DoctorId = doctor.DocId;
-                    response.FullName = doctor.FullName;
-                }
-            }
-            // If user is a Patient, get PatientID
-            else if (user.Role == "Patient")
+            // Get Patient or Doctor information
+            if (user.Role == "Patient")
             {
                 var patient = await _context.Patients
                     .FirstOrDefaultAsync(p => p.UserId == user.UserId);
@@ -146,11 +134,101 @@ namespace Hospital_Management_system.Controllers
                     response.PatientId = patient.PatientId;
                     response.FullName = patient.FullName;
                 }
+                else
+                {
+                    return BadRequest(new { message = "Patient profile not found. Please contact support." });
+                }
+            }
+            else if (user.Role == "Doctor")
+            {
+                var doctor = await _context.Doctors
+                    .FirstOrDefaultAsync(d => d.UserId == user.UserId);
+
+                if (doctor != null)
+                {
+                    response.DoctorId = doctor.DocId;
+                    response.FullName = doctor.FullName;
+                }
+                else
+                {
+                    return BadRequest(new { message = "Doctor profile not found. Please contact support." });
+                }
             }
 
             return Ok(response);
         }
-        
+
+        //// POST: api/Users (Registration)
+        //[HttpPost]
+        //public async Task<ActionResult<User>> Register([FromBody] UserRegistrationDto registrationDto)
+        //{
+        //    // Check if email already exists
+        //    if (await _context.Users.AnyAsync(u => u.Email == registrationDto.Email))
+        //    {
+        //        return BadRequest(new { message = "This email is already registered. Please use a different email or try logging in." });
+        //    }
+
+        //    // Validate role
+        //    if (registrationDto.Role != "Doctor" && registrationDto.Role != "Patient" && registrationDto.Role != "Admin")
+        //    {
+        //        return BadRequest(new { message = "Invalid role" });
+        //    }
+
+        //    // Prevent patients from using @swasthatech.com domain
+        //    if (registrationDto.Role == "Patient" && registrationDto.Email.ToLower().EndsWith("@swasthatech.com"))
+        //    {
+        //        return BadRequest(new { message = "@swasthatech.com domain is reserved for internal use only." });
+        //    }
+
+        //    using var transaction = await _context.Database.BeginTransactionAsync();
+
+        //    try
+        //    {
+        //        // Create User
+        //        var user = new User
+        //        {
+        //            Email = registrationDto.Email,
+        //            PswdHash = ComputeSHA256Hash(registrationDto.PswdHash), // Hash the password
+        //            Role = registrationDto.Role,
+        //            CreatedAt = DateTime.Now
+        //        };
+
+        //        _context.Users.Add(user);
+        //        await _context.SaveChangesAsync();
+
+        //        // Create corresponding Patient or Doctor record
+        //        if (registrationDto.Role == "Patient")
+        //        {
+        //            var patient = new Patient
+        //            {
+        //                UserId = user.UserId,
+        //                FullName = registrationDto.Email.Split('@')[0], // Temporary name from email
+        //            };
+        //            _context.Patients.Add(patient);
+        //            await _context.SaveChangesAsync();
+        //        }
+        //        else if (registrationDto.Role == "Doctor")
+        //        {
+        //            var doctor = new Doctor
+        //            {
+        //                UserId = user.UserId,
+        //                FullName = registrationDto.Email.Split('@')[0], // Temporary name from email
+        //            };
+        //            _context.Doctors.Add(doctor);
+        //            await _context.SaveChangesAsync();
+        //        }
+
+        //        await transaction.CommitAsync();
+
+        //        return Ok(new { message = "Registration successful", userId = user.UserId });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        await transaction.RollbackAsync();
+        //        return StatusCode(500, new { message = "Registration failed", error = ex.Message });
+        //    }
+        //}
+
 
         private static string ComputeSHA256Hash(string rawData)
         {

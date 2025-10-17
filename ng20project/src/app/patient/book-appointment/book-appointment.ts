@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { AbstractControl, ValidationErrors,FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AppointmentService } from '../../services/appointmentservices';
 import { DoctorService, Doctor } from '../../services/doctorservices';
@@ -21,6 +21,7 @@ export class BookAppointmentComponent implements OnInit {
   successMessage: string = '';
   isLoading: boolean = false;
   minDate: string = '';
+  maxDate: string = '';
   availableSlots: string[] = [];
   loadingSlots: boolean = false;
 
@@ -32,13 +33,36 @@ export class BookAppointmentComponent implements OnInit {
     private doctorService: DoctorService
   ) {
     this.appointmentForm = this.fb.group({
-      appointmentDate: ['', Validators.required],
+      appointmentDate: ['', [Validators.required, this.futureDateValidator]],
       appointmentTime: ['', Validators.required],
       symptoms: ['', Validators.required]
     });
 
+    // Set minimum date to today
     const today = new Date();
     this.minDate = today.toISOString().split('T')[0];
+    
+    // Set maximum date to 3 months from now (optional)
+    const maxDate = new Date();
+    maxDate.setMonth(maxDate.getMonth() + 3);
+    this.maxDate = maxDate.toISOString().split('T')[0];
+  }
+
+  // Custom validator to ensure date is not in the past
+  futureDateValidator(control: AbstractControl): ValidationErrors | null {
+    if (!control.value) {
+      return null;
+    }
+    
+    const selectedDate = new Date(control.value);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to compare only dates
+    
+    if (selectedDate < today) {
+      return { pastDate: true };
+    }
+    
+    return null;
   }
 
   ngOnInit(): void {

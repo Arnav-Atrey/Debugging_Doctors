@@ -950,7 +950,7 @@
     ],
     "ReturnTypes": [
       {
-        "Type": "Hospital_Management_system.Models.DTOs.UserDto",
+        "Type": "Hospital_Management_system.Models.DTOs.LoginResponseDto",
         "MediaTypes": [
           "text/plain",
           "application/json",

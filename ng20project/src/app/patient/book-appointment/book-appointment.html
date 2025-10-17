@@ -29,10 +29,14 @@
                 formControlName="appointmentDate"
                 class="form-control"
                 [min]="minDate"
+                [max]="maxDate"
                 [class.is-invalid]="appointmentForm.get('appointmentDate')?.invalid && appointmentForm.get('appointmentDate')?.touched"
               >
               <div *ngIf="appointmentForm.get('appointmentDate')?.invalid && appointmentForm.get('appointmentDate')?.touched" class="invalid-feedback">
-                Date is required.
+                <div *ngIf="appointmentForm.get('appointmentDate')?.errors?.['required']">Date is required.</div>
+                <div *ngIf="appointmentForm.get('appointmentDate')?.errors?.['pastDate']">
+                  Cannot book appointments for past dates. Please select today or a future date.
+                </div>
               </div>
             </div>
 

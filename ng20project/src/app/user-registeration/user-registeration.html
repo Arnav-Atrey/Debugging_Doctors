@@ -27,6 +27,9 @@
         <div *ngIf="registrationForm.get('email')?.invalid && registrationForm.get('email')?.touched" class="invalid-feedback">
           <div *ngIf="registrationForm.get('email')?.errors?.['required']">Email is required.</div>
           <div *ngIf="registrationForm.get('email')?.errors?.['email']">Invalid email format.</div>
+          <div *ngIf="registrationForm.get('email')?.errors?.['swasthatechDomain']">
+            Patients cannot use @swasthatech.com domain. This domain is reserved for internal use.
+          </div>
         </div>
         <div *ngIf="registrationForm.get('email')?.errors?.['doctorDomain'] && registrationForm.get('email')?.touched" class="invalid-feedback">
           Doctor email must end with @swasthatech.com.
