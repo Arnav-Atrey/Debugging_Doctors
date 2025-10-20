@@ -5,13 +5,14 @@ import { Router } from '@angular/router';
 import { DoctorService, Doctor, DoctorUpdateDto } from '../../services/doctorservices';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { CapitalizeNamePipe } from '../../pipes/capitalize-name.pipe';
 
 @Component({
   selector: 'app-doctor-profile',
   templateUrl: './profile.html',
   styleUrls: ['./profile.css'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule]
+  imports: [CommonModule, ReactiveFormsModule, CapitalizeNamePipe]
 })
 export class DoctorProfileComponent implements OnInit {
   profileForm: FormGroup;

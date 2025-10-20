@@ -45,16 +45,33 @@
               <select
                 id="appointmentTime"
                 formControlName="appointmentTime"
-                class="form-control"
+                class="form-select"
                 [class.is-invalid]="appointmentForm.get('appointmentTime')?.invalid && appointmentForm.get('appointmentTime')?.touched"
-                required
               >
-                <option value="" disabled selected>Select a time slot</option>
-                <option *ngFor="let slot of availableSlots" [value]="slot">{{ slot }}</option>
+                <option value="">Select a time slot</option>
+                <option *ngIf="loadingSlots" disabled>Loading available slots...</option>
+                <option *ngIf="!loadingSlots && timeSlots.length === 0 && appointmentForm.value.appointmentDate" disabled>
+                  No slots available for this date
+                </option>
+                <option 
+                  *ngFor="let slot of timeSlots" 
+                  [value]="slot.time"
+                  [disabled]="!slot.available"
+                  [ngClass]="{
+                    'available-slot': slot.available,
+                    'taken-slot': !slot.available
+                  }"
+                >
+                  {{ slot.time }} {{ slot.available ? '✓ Available' : '✗ Unavailable' }}
+                </option>
               </select>
               <div *ngIf="appointmentForm.get('appointmentTime')?.invalid && appointmentForm.get('appointmentTime')?.touched" class="invalid-feedback">
                 Time is required.
               </div>
+              <small class="text-muted">
+                <i class="bi bi-info-circle me-1"></i>
+                Slots marked with ✓ are available. Unavailable slots (past times or taken) are disabled.
+              </small>
             </div>
 
             <div class="mb-3">

@@ -25,7 +25,19 @@ export class DoctorDashboardComponent implements OnInit {
   
   // For rejection modal
   rejectionReason: string = '';
-  selectedAppointmentId: number | null = null;
+  customRejectionReason: string = '';
+  showCustomReason: boolean = false;
+  selectedAppointmentId: number | null = null
+
+  // Predefined rejection reasons
+  rejectionReasons: string[] = [
+    'Not available on selected date/time',
+    'Emergency situation - Cannot accommodate',
+    'Other commitments at that time',
+    'Patient needs specialist consultation first',
+    'Technical/Administrative error',
+    'Other'
+  ];
   
   // For completion modal
   completionData: AppointmentCompletionDto = {
@@ -112,6 +124,15 @@ export class DoctorDashboardComponent implements OnInit {
   openRejectModal(appointmentId: number): void {
     this.selectedAppointmentId = appointmentId;
     this.rejectionReason = '';
+    this.customRejectionReason = '';
+    this.showCustomReason = false;
+  }
+
+  onRejectionReasonChange(): void {
+    this.showCustomReason = this.rejectionReason === 'Other';
+    if (!this.showCustomReason) {
+      this.customRejectionReason = '';
+    }
   }
 
   markAsPaid(appointmentId: number): void {
@@ -144,12 +165,31 @@ getPaymentBadgeClass(status: string): string {
   rejectAppointment(): void {
     if (!this.selectedAppointmentId) return;
 
-    this.appointmentService.rejectAppointment(this.selectedAppointmentId, this.rejectionReason).subscribe({
+    // Validate that a reason is selected
+    if (!this.rejectionReason) {
+      this.errorMessage = 'Please select a reason for rejection.';
+      return;
+    }
+
+    // If "Other" is selected, validate custom reason
+    if (this.rejectionReason === 'Other' && !this.customRejectionReason.trim()) {
+      this.errorMessage = 'Please specify the reason for rejection.';
+      return;
+    }
+
+    // Use custom reason if "Other" is selected, otherwise use selected reason
+    const finalReason = this.rejectionReason === 'Other' 
+      ? this.customRejectionReason 
+      : this.rejectionReason;
+
+    this.appointmentService.rejectAppointment(this.selectedAppointmentId, finalReason).subscribe({
       next: () => {
         this.successMessage = 'Appointment rejected.';
         this.loadAllAppointments();
         this.selectedAppointmentId = null;
         this.rejectionReason = '';
+        this.customRejectionReason = '';
+        this.showCustomReason = false;
         setTimeout(() => this.successMessage = '', 3000);
       },
       error: (error) => {

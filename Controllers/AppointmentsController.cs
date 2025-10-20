@@ -484,7 +484,7 @@ namespace Hospital_Management_system.Controllers
 
         // GET: api/Appointments/doctor/{doctorId}/available-slots?date=2025-10-10
         [HttpGet("doctor/{doctorId}/available-slots")]
-        public async Task<ActionResult<IEnumerable<string>>> GetAvailableSlots(int doctorId, [FromQuery] string date)
+        public async Task<ActionResult<object>> GetAvailableSlots(int doctorId, [FromQuery] string date)
         {
             if (!DateTime.TryParse(date, out DateTime selectedDate))
             {
@@ -507,10 +507,14 @@ namespace Hospital_Management_system.Controllers
                 .Select(a => a.AppointmentDate.ToString("HH:mm"))
                 .ToListAsync();
 
-            // Return available slots
-            var availableSlots = allSlots.Except(bookedSlots).ToList();
+            // Return all slots with availability status
+            var slotsWithAvailability = allSlots.Select(slot => new
+            {
+                time = slot,
+                available = !bookedSlots.Contains(slot)
+            }).ToList();
 
-            return Ok(availableSlots);
+            return Ok(slotsWithAvailability);
         }
 
         // PUT: api/Appointments/5

@@ -78,21 +78,74 @@ namespace Hospital_Management_system.Controllers
         [HttpPost]
         public async Task<ActionResult<User>> PostUser(UserRegistrationDto userDto)
         {
-            // Map DTO to User entity
-            var user = new User
+            // Check if email already exists
+            if (await _context.Users.AnyAsync(u => u.Email == userDto.Email))
             {
-                Email = userDto.Email,
-                PswdHash = ComputeSHA256Hash(userDto.PswdHash),
-                Role = userDto.Role,
-                CreatedAt = DateTime.UtcNow, // Set creation date
-                Doctors = new List<Doctor>(), // Initialize empty collections
-                Patients = new List<Patient>()
-            };
+                return BadRequest(new { message = "This email is already registered. Please use a different email or try logging in." });
+            }
 
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+            // Validate role
+            if (userDto.Role != "Doctor" && userDto.Role != "Patient" && userDto.Role != "Admin")
+            {
+                return BadRequest(new { message = "Invalid role" });
+            }
 
-            return CreatedAtAction("GetUser", new { id = user.UserId }, user);
+            // Prevent patients from using @swasthatech.com domain
+            if (userDto.Role == "Patient" && userDto.Email.ToLower().EndsWith("@swasthatech.com"))
+            {
+                return BadRequest(new { message = "@swasthatech.com domain is reserved for internal use only." });
+            }
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                // Map DTO to User entity
+                var user = new User
+                {
+                    Email = userDto.Email,
+                    PswdHash = ComputeSHA256Hash(userDto.PswdHash),
+                    Role = userDto.Role,
+                    CreatedAt = DateTime.UtcNow, // Set creation date (preserving original)
+                    Doctors = new List<Doctor>(), // Initialize empty collections (preserving original)
+                    Patients = new List<Patient>()
+                };
+
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+
+                // Create corresponding Patient or Doctor record
+                if (userDto.Role == "Patient")
+                {
+                    var patient = new Patient
+                    {
+                        UserId = user.UserId,
+                        FullName = userDto.Email.Split('@')[0], // Temporary name from email
+                    };
+                    _context.Patients.Add(patient);
+                    await _context.SaveChangesAsync();
+                }
+                else if (userDto.Role == "Doctor")
+                {
+                    var doctor = new Doctor
+                    {
+                        UserId = user.UserId,
+                        FullName = userDto.Email.Split('@')[0], // Temporary name from email
+                    };
+                    _context.Doctors.Add(doctor);
+                    await _context.SaveChangesAsync();
+                }
+
+                await transaction.CommitAsync();
+
+                // Preserve original return behavior
+                return CreatedAtAction("GetUser", new { id = user.UserId }, user);
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, new { message = "Registration failed", error = ex.Message });
+            }
         }
 
         // POST: api/Users/login
