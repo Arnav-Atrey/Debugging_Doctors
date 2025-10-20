@@ -180,19 +180,41 @@
       </div>
       <div class="modal-body">
         <div class="mb-3">
-          <label for="rejectionReason" class="form-label">Reason for Rejection (Optional)</label>
-          <textarea
+          <label for="rejectionReason" class="form-label">Reason for Rejection *</label>
+          <select
             id="rejectionReason"
+            class="form-select"
+            [(ngModel)]="rejectionReason"
+            (change)="onRejectionReasonChange()"
+          >
+            <option value="">Select a reason</option>
+            <option *ngFor="let reason of rejectionReasons" [value]="reason">
+              {{ reason }}
+            </option>
+          </select>
+        </div>
+        
+        <!-- Show text area if "Other" is selected -->
+        <div class="mb-3" *ngIf="showCustomReason">
+          <label for="customRejectionReason" class="form-label">Please specify the reason *</label>
+          <textarea
+            id="customRejectionReason"
             class="form-control"
             rows="3"
-            [(ngModel)]="rejectionReason"
-            placeholder="Enter reason for rejection..."
+            [(ngModel)]="customRejectionReason"
+            placeholder="Enter specific reason for rejection..."
           ></textarea>
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-danger" data-bs-dismiss="modal" (click)="rejectAppointment()">
+        <button 
+          type="button" 
+          class="btn btn-danger" 
+          data-bs-dismiss="modal" 
+          (click)="rejectAppointment()"
+          [disabled]="!rejectionReason || (rejectionReason === 'Other' && !customRejectionReason.trim())"
+        >
           Reject Appointment
         </button>
       </div>

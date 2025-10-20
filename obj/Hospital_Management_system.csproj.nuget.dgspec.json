@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Demos\\Hospital_Management_system\\Hospital_Management_system.csproj": {}
+    "C:\\Demos\\Debugging_Doctors\\Hospital_Management_system.csproj": {}
   },
   "projects": {
-    "C:\\Demos\\Hospital_Management_system\\Hospital_Management_system.csproj": {
+    "C:\\Demos\\Debugging_Doctors\\Hospital_Management_system.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Demos\\Hospital_Management_system\\Hospital_Management_system.csproj",
+        "projectUniqueName": "C:\\Demos\\Debugging_Doctors\\Hospital_Management_system.csproj",
         "projectName": "Hospital_Management_system",
-        "projectPath": "C:\\Demos\\Hospital_Management_system\\Hospital_Management_system.csproj",
+        "projectPath": "C:\\Demos\\Debugging_Doctors\\Hospital_Management_system.csproj",
         "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "C:\\Demos\\Hospital_Management_system\\obj\\",
+        "outputPath": "C:\\Demos\\Debugging_Doctors\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

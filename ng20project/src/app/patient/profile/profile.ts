@@ -4,13 +4,14 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { Router } from '@angular/router';
 import { PatientService, PatientProfile, PatientUpdateDto } from '../../services/patientservices';
 import { UniqueValidators } from '../../validators/unique-validators';
+import { CapitalizeNamePipe } from '../../pipes/capitalize-name.pipe';
 
 @Component({
   selector: 'app-patient-profile',
   templateUrl: './profile.html',
   styleUrls: ['./profile.css'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule]
+  imports: [CommonModule, ReactiveFormsModule, CapitalizeNamePipe]
 })
 export class PatientProfileComponent implements OnInit {
   profileForm: FormGroup;

@@ -9,6 +9,11 @@ export interface AppointmentBookingDto {
   symptoms?: string;
 }
 
+export interface TimeSlot {
+  time: string;
+  available: boolean;
+}
+
 export interface AppointmentCompletionDto {
   diagnosis?: string;
   medicines?: string;
@@ -102,8 +107,8 @@ updatePaymentStatus(appointmentId: number, status: string): Observable<any> {
   return this.http.put(`${this.apiUrl}/${appointmentId}/payment`, { invoiceStatus: status });
 }
 
-getAvailableSlots(doctorId: number, date: string): Observable<string[]> {
-  return this.http.get<string[]>(`${this.apiUrl}/doctor/${doctorId}/available-slots?date=${date}`);
+getAvailableSlots(doctorId: number, date: string): Observable<TimeSlot[]> {
+  return this.http.get<TimeSlot[]>(`${this.apiUrl}/doctor/${doctorId}/available-slots?date=${date}`);
 }
 
 }

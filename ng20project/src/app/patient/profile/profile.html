@@ -5,7 +5,7 @@
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="card-title mb-4">
-              Profile: {{ patientPrefix }} {{ profileForm.value.fullName }}
+              Profile: {{ patientPrefix }} {{ profileForm.value.fullName | capitalizeName }}
             </h2>
             <button 
               type="button" 

@@ -41,3 +41,15 @@ It is still giving that error. Anyway, we will come to that later. Can you help 
 2) While booking, time should come as dropdown for different slots, and it should only display the slots that are not taken
 3) Validations for doctor, patient phone number to ensure an existing phone number is NOT entered -- same thing to be applied for HPID, Aadhar_No. 
 4) Doctor Photo
+
+
+Okay thanks. Now i need to make more changes to the code:
+1) While displaying the name of the user in the profile on the navbar or inside the profile tab, the first letter of First name and last name should be in capitals
+2) When doctor rejects appointment he has to write the reason right. I want to change it to a dropdown with a list of reasons and if he selects others, then he can type in the reason in the given text box.
+3) While patient is booking an appointment, the slot timetable should have the available slots in bold and taken ones cannot be selected and in light font
+
+I want to add an admin role into this. Basically an admin can oversee the doctors and their profiles, patients and their profiles, appointments booked.
+If a user wants to register as an admin, he should fill his user details and admin details and then after submitting his details, he can login, but he can access things only after another existing admin gives him the approval for access.
+Also while registering there should be admin dropdown for admin registeration.
+
+I want to create an AI chatbot for this using groq. How do i proceed with this?
