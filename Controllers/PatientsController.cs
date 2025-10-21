@@ -1,5 +1,4 @@
-﻿//updated controller of patients 
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -36,40 +35,15 @@ namespace Hospital_Management_system.Controllers
                 ContactNo = patient.ContactNo,
                 Address = patient.Address,
                 Aadhaar_no = patient.Aadhaar_no,
-                //Age = CalculateAge(patient.DOB)
+                Age = CalculateAge(patient.Dob)
             }).ToList();
 
             return patientDtos;
         }
 
-        //// GET: api/Patients/5
-        //[HttpGet("{id}")]
-        //public async Task<ActionResult<PatientDto>> GetPatient(int id)
-        //{
-        //    var patient = await _context.Patients.FindAsync(id);
-
-        //    if (patient == null)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    // Map to PatientDto and calculate age
-        //    var patientDto = new PatientDto
-        //    {
-        //        FullName = patient.FullName,
-        //        Gender = patient.Gender,
-        //        ContactNo = patient.ContactNo,
-        //        Address = patient.Address,
-        //        Aadhaar_no = patient.Aadhaar_no,
-        //        //Age = CalculateAge(patient.DOB)
-        //    };
-
-        //    return patientDto;
-        //}
-
         // GET: api/Patients/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Patient>> GetPatient(int id)
+        public async Task<ActionResult<PatientDto>> GetPatient(int id)
         {
             var patient = await _context.Patients.FindAsync(id);
 
@@ -78,11 +52,20 @@ namespace Hospital_Management_system.Controllers
                 return NotFound();
             }
 
-            return patient;
+            // Map to PatientDto and calculate age
+            var patientDto = new PatientDto
+            {
+                FullName = patient.FullName,
+                Gender = patient.Gender,
+                ContactNo = patient.ContactNo,
+                Address = patient.Address,
+                Aadhaar_no = patient.Aadhaar_no,
+                Age = CalculateAge(patient.Dob)
+            };
+
+            return patientDto;
         }
 
-        // PUT: api/Patients/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         // PUT: api/Patients/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutPatient(int id, [FromBody] PatientUpdateDto patientDto)
@@ -136,7 +119,7 @@ namespace Hospital_Management_system.Controllers
             return Ok(new { exists });
         }
 
-        // GET: api/Patients/check-aadhaar/{aadhaarNo}
+        // GET: api/Patients/check-aadhaar/{aadhaarNo}]
         [HttpGet("check-aadhaar/{aadhaarNo}")]
         public async Task<ActionResult<bool>> CheckAadhaarExists(string aadhaarNo, [FromQuery] int? excludePatientId)
         {
@@ -147,7 +130,6 @@ namespace Hospital_Management_system.Controllers
         }
 
         // POST: api/Patients
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<Patient>> PostPatient(Patient patient)
         {
@@ -179,14 +161,15 @@ namespace Hospital_Management_system.Controllers
         }
 
         // Utility function to calculate age from DOB
-        private int CalculateAge(DateTime? dob)
+        private int CalculateAge(DateOnly? dob)
         {
             if (!dob.HasValue) return 0;
 
-            var today = DateTime.Today;
+            var today = DateOnly.FromDateTime(DateTime.Today);
             var age = today.Year - dob.Value.Year;
-            if (dob.Value.Date > today.AddYears(-age)) age--; // Adjust if birthday hasn't occurred yet
+            if (dob.Value > today.AddYears(-age)) age--;
             return age;
         }
+
     }
 }

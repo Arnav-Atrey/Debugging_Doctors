@@ -37,6 +37,7 @@ namespace Hospital_Management_system
 
 
 
+
             // Add services to the container.
 
             builder.Services.AddControllers();

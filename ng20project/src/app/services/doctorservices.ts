@@ -42,7 +42,7 @@ export class DoctorService {
     return this.http.get<Doctor[]>(`${this.apiUrl}/specialization/${specialization}`);
   }
 
-  updateDoctor(id: number, data: DoctorUpdateDto): Observable<any> {
-    return this.http.put(`${this.apiUrl}/${id}`, data);
+  updateDoctor(id: number, data: DoctorUpdateDto): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/${id}`, data);
   }
 }

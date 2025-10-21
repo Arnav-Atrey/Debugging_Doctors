@@ -1,8 +1,5 @@
-﻿//Doctors controller
-
-using Hospital_Management_system.Models;
+﻿using Hospital_Management_system.Models;
 using Hospital_Management_system.Models.DTOs;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -32,20 +29,29 @@ namespace Hospital_Management_system.Controllers
 
         // GET: api/Doctors/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Doctor>> GetDoctor(int id)
+        public async Task<ActionResult<DoctorDto>> GetDoctor(int id)
         {
-            var doctor = await _context.Doctors.FindAsync(id);
+            var doctor = await _context.Doctors
+                .Where(d => d.DocId == id)
+                .Select(d => new DoctorDto
+                {
+                    DocId = d.DocId,
+                    FullName = d.FullName,
+                    Specialisation = d.Specialisation,
+                    HPID = d.HPID,
+                    Availability = d.Availability,
+                    ContactNo = d.ContactNo
+                })
+                .FirstOrDefaultAsync();
 
             if (doctor == null)
             {
-                return NotFound();
+                return NotFound(new { message = "Doctor not found" });
             }
 
-            return doctor;
+            return Ok(doctor);
         }
 
-        // PUT: api/Doctors/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         // PUT: api/Doctors/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutDoctor(int id, [FromBody] DoctorUpdateDto doctorDto)
@@ -67,7 +73,6 @@ namespace Hospital_Management_system.Controllers
             doctor.HPID = doctorDto.HPID;
             doctor.Availability = doctorDto.Availability;
             doctor.ContactNo = doctorDto.ContactNo;
-            // Note: UserId should not be changed
 
             try
             {
@@ -109,7 +114,6 @@ namespace Hospital_Management_system.Controllers
         }
 
         // POST: api/Doctors
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<Doctor>> PostDoctor(Doctor doctor)
         {

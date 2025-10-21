@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+<<<<<<< HEAD
 export interface AppointmentBookingDto {
   patientId: number;
   doctorId: number;
@@ -20,6 +21,8 @@ export interface AppointmentCompletionDto {
   invoiceAmount?: number;
 }
 
+=======
+>>>>>>> new-feature-branch
 export interface AppointmentResponseDto {
   appointmentId: number;
   patientId: number;
@@ -29,86 +32,83 @@ export interface AppointmentResponseDto {
   specialisation: string;
   appointmentDate: string;
   appointmentStatus: string;
-  symptoms?: string;
-  diagnosis?: string;
-  medicines?: string;
+  symptoms: string;
+  diagnosis: string;
+  medicines: string;
   invoiceStatus: string;
+  invoiceAmount: number;
+}
+
+export interface AppointmentCompletionDto {
+  diagnosis: string;
+  medicines: string;
   invoiceAmount?: number;
 }
 
-export interface AppointmentActionDto {
-  reason?: string;
+export interface AppointmentBookingDto {
+  patientId: number;
+  doctorId: number;
+  appointmentDate: string;
+  symptoms: string;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class AppointmentService {
-  private apiUrl = 'https://localhost:7090/api/Appointments';
+  private apiUrl = 'https://localhost:7090';
 
   constructor(private http: HttpClient) {}
 
-  // Book appointment
-  bookAppointment(data: AppointmentBookingDto): Observable<AppointmentResponseDto> {
-    return this.http.post<AppointmentResponseDto>(`${this.apiUrl}/book`, data);
-  }
-
-  // Get patient appointments
-  getPatientAppointments(patientId: number): Observable<AppointmentResponseDto[]> {
-    return this.http.get<AppointmentResponseDto[]>(`${this.apiUrl}/patient/${patientId}`);
-  }
-
-  // Get doctor pending appointments
   getDoctorPendingAppointments(doctorId: number): Observable<AppointmentResponseDto[]> {
-    return this.http.get<AppointmentResponseDto[]>(`${this.apiUrl}/doctor/${doctorId}/pending`);
+    return this.http.get<AppointmentResponseDto[]>(`${this.apiUrl}/api/Appointments/doctor/${doctorId}/pending`);
   }
 
-  // Get doctor confirmed appointments
-  getDoctorConfirmedAppointments(doctorId: number): Observable<AppointmentResponseDto[]> {
-    return this.http.get<AppointmentResponseDto[]>(`${this.apiUrl}/doctor/${doctorId}/confirmed`);
-  }
-
-  // Confirm appointment (doctor accepts)
-  confirmAppointment(appointmentId: number): Observable<any> {
-    return this.http.put(`${this.apiUrl}/${appointmentId}/confirm`, {});
-  }
-
-  // Reject appointment (doctor rejects)
-  rejectAppointment(appointmentId: number, reason?: string): Observable<any> {
-    return this.http.put(`${this.apiUrl}/${appointmentId}/reject`, { reason });
-  }
-
-  // Cancel appointment
-  cancelAppointment(appointmentId: number, reason?: string): Observable<any> {
-    return this.http.put(`${this.apiUrl}/${appointmentId}/cancel`, { reason });
-  }
-
-  // Get single appointment
-  getAppointment(appointmentId: number): Observable<AppointmentResponseDto> {
-    return this.http.get<AppointmentResponseDto>(`${this.apiUrl}/${appointmentId}`);
-  }
-
-    // Get doctor previous appointments
-  getDoctorPreviousAppointments(doctorId: number): Observable<AppointmentResponseDto[]> {
-    return this.http.get<AppointmentResponseDto[]>(`${this.apiUrl}/doctor/${doctorId}/previous`);
-  }
-
-  // Get doctor upcoming appointments
   getDoctorUpcomingAppointments(doctorId: number): Observable<AppointmentResponseDto[]> {
-    return this.http.get<AppointmentResponseDto[]>(`${this.apiUrl}/doctor/${doctorId}/upcoming`);
+    return this.http.get<AppointmentResponseDto[]>(`${this.apiUrl}/api/Appointments/doctor/${doctorId}/upcoming`);
   }
 
-  // Complete appointment
-  completeAppointment(appointmentId: number, data: AppointmentCompletionDto): Observable<any> {
-    return this.http.put(`${this.apiUrl}/${appointmentId}/complete`, data);
-}
+  getDoctorPreviousAppointments(doctorId: number): Observable<AppointmentResponseDto[]> {
+    return this.http.get<AppointmentResponseDto[]>(`${this.apiUrl}/api/Appointments/doctor/${doctorId}/previous`);
+  }
 
-updatePaymentStatus(appointmentId: number, status: string): Observable<any> {
-  return this.http.put(`${this.apiUrl}/${appointmentId}/payment`, { invoiceStatus: status });
-}
+  getPatientAppointments(patientId: number): Observable<AppointmentResponseDto[]> {
+    return this.http.get<AppointmentResponseDto[]>(`${this.apiUrl}/api/Appointments/patient/${patientId}`);
+  }
 
+<<<<<<< HEAD
 getAvailableSlots(doctorId: number, date: string): Observable<TimeSlot[]> {
   return this.http.get<TimeSlot[]>(`${this.apiUrl}/doctor/${doctorId}/available-slots?date=${date}`);
 }
+=======
+  getAvailableSlots(doctorId: number, date: string): Observable<string[]> {
+    return this.http.get<string[]>(`${this.apiUrl}/api/Appointments/doctor/${doctorId}/available-slots`, {
+      params: { date }
+    });
+  }
+>>>>>>> new-feature-branch
 
+  bookAppointment(bookingData: AppointmentBookingDto): Observable<AppointmentResponseDto> {
+    return this.http.post<AppointmentResponseDto>(`${this.apiUrl}/api/Appointments/book`, bookingData);
+  }
+
+  confirmAppointment(appointmentId: number): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/api/Appointments/${appointmentId}/confirm`, {});
+  }
+
+  rejectAppointment(appointmentId: number, reason: string): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/api/Appointments/${appointmentId}/reject`, { reason });
+  }
+
+  cancelAppointment(appointmentId: number, reason: string): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/api/Appointments/${appointmentId}/cancel`, { reason });
+  }
+
+  updatePaymentStatus(appointmentId: number, status: string): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/api/Appointments/${appointmentId}/payment`, { invoiceStatus: status });
+  }
+
+  completeAppointment(appointmentId: number, data: AppointmentCompletionDto): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/api/Appointments/${appointmentId}/complete`, data);
+  }
 }

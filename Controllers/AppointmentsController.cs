@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Hospital_Management_system.Models;
 using Hospital_Management_system.Models.DTOs;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 
 namespace Hospital_Management_system.Controllers
 {
@@ -19,6 +20,34 @@ namespace Hospital_Management_system.Controllers
         public AppointmentsController(DebuggingDoctorsContext context)
         {
             _context = context;
+        }
+
+        [HttpGet("patient-data")]
+        public async Task<ActionResult<PatientDetailsDto>> GetPatientDataForApprovedAppointment(
+    int appointmentId,
+    int doctorId,  // Changed from userId
+    string userRole)
+        {
+            try
+            {
+                var result = await _context.Database
+                    .SqlQueryRaw<PatientDetailsDto>(
+                        "EXEC GetPatientDataForApprovedAppointment @AppointmentId, @DoctorId, @UserRole",
+                        new SqlParameter("@AppointmentId", appointmentId),
+                        new SqlParameter("@DoctorId", doctorId),  // Changed parameter name
+                        new SqlParameter("@UserRole", userRole)
+                    )
+                    .ToListAsync();
+
+                if (result == null || !result.Any())
+                    return NotFound(new { message = "No data found or access denied." });
+
+                return Ok(result.First());
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         // GET: api/Appointments
@@ -111,6 +140,29 @@ namespace Hospital_Management_system.Controllers
                 .ToListAsync();
 
             return appointments;
+        }
+
+        [HttpGet("{id}/prescription")]
+        public async Task<ActionResult<PrescriptionDto>> GetPrescription(int id)
+        {
+            var prescription = await _context.Prescriptions
+                .FirstOrDefaultAsync(p => p.AppointmentID == id);
+
+            if (prescription == null)
+                return NotFound("Prescription not found for this appointment.");
+
+            return Ok(new PrescriptionDto
+            {
+                AppointmentId = prescription.AppointmentID,
+                Diagnosis = prescription.Diagnosis,
+                Medicines = string.IsNullOrEmpty(prescription.MedicinesJson)
+                    ? new List<MedicineDto>()
+                    : JsonSerializer.Deserialize<List<MedicineDto>>(prescription.MedicinesJson),
+                ChiefComplaints = prescription.ChiefComplaints,
+                PastHistory = prescription.PastHistory,
+                Examination = prescription.Examination,
+                Advice = prescription.Advice
+            });
         }
 
         // GET: api/Appointments/doctor/{doctorId}/pending
@@ -208,7 +260,7 @@ namespace Hospital_Management_system.Controllers
                 DoctorId = bookingDto.DoctorId,
                 AppointmentDate = bookingDto.AppointmentDate,
                 Symptoms = bookingDto.Symptoms,
-                AppointmentStatus = "Pending", // Initial status
+                AppointmentStatus = "Pending",
                 InvoiceStatus = "Pending"
             };
 
@@ -284,7 +336,6 @@ namespace Hospital_Management_system.Controllers
             }
 
             appointment.AppointmentStatus = "Rejected";
-            // Store reason in Diagnosis field temporarily (or just ignore it if you don't want to store it)
             appointment.Diagnosis = $"Rejected: {actionDto.Reason}";
 
             try
@@ -491,7 +542,6 @@ namespace Hospital_Management_system.Controllers
                 return BadRequest(new { message = "Invalid date format" });
             }
 
-            // Define time slots (9 AM to 5 PM, 30-minute intervals)
             var allSlots = new List<string>();
             for (int hour = 9; hour < 17; hour++)
             {
@@ -499,7 +549,6 @@ namespace Hospital_Management_system.Controllers
                 allSlots.Add($"{hour:D2}:30");
             }
 
-            // Get booked slots for this doctor on this date
             var bookedSlots = await _context.Appointments
                 .Where(a => a.DoctorId == doctorId
                     && a.AppointmentDate.Date == selectedDate.Date
@@ -507,12 +556,16 @@ namespace Hospital_Management_system.Controllers
                 .Select(a => a.AppointmentDate.ToString("HH:mm"))
                 .ToListAsync();
 
+<<<<<<< HEAD
             // Return all slots with availability status
             var slotsWithAvailability = allSlots.Select(slot => new
             {
                 time = slot,
                 available = !bookedSlots.Contains(slot)
             }).ToList();
+=======
+            var availableSlots = allSlots.Except(bookedSlots).ToList();
+>>>>>>> new-feature-branch
 
             return Ok(slotsWithAvailability);
         }
@@ -547,7 +600,7 @@ namespace Hospital_Management_system.Controllers
             return NoContent();
         }
 
-        // POST: api/Appointments (Keep for backward compatibility)
+        // POST: api/Appointments
         [HttpPost]
         public async Task<ActionResult<Appointment>> PostAppointment(Appointment appointment)
         {
@@ -571,6 +624,53 @@ namespace Hospital_Management_system.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        [HttpPost("save-prescription")]
+        public async Task<IActionResult> SavePrescription([FromBody] PrescriptionDto dto)
+        {
+            if (dto == null || dto.AppointmentId <= 0)
+                return BadRequest("Invalid prescription data.");
+
+            var appointment = await _context.Appointments.FindAsync(dto.AppointmentId);
+            if (appointment == null)
+                return NotFound("Appointment not found.");
+
+            if (appointment.AppointmentStatus != "Confirmed")
+                return BadRequest("Only confirmed appointments can be completed with a prescription.");
+
+            var existingPrescription = await _context.Prescriptions
+                .FirstOrDefaultAsync(p => p.AppointmentID == dto.AppointmentId);
+
+            if (existingPrescription != null)
+            {
+                existingPrescription.Diagnosis = dto.Diagnosis ?? existingPrescription.Diagnosis;
+                existingPrescription.MedicinesJson = JsonSerializer.Serialize(dto.Medicines ?? JsonSerializer.Deserialize<List<MedicineDto>>(existingPrescription.MedicinesJson));
+                existingPrescription.ChiefComplaints = dto.ChiefComplaints ?? existingPrescription.ChiefComplaints;
+                existingPrescription.PastHistory = dto.PastHistory ?? existingPrescription.PastHistory;
+                existingPrescription.Examination = dto.Examination ?? existingPrescription.Examination;
+                existingPrescription.Advice = dto.Advice ?? existingPrescription.Advice;
+                existingPrescription.UpdatedAt = DateTime.UtcNow;
+            }
+            else
+            {
+                var prescription = new Prescription
+                {
+                    AppointmentID = dto.AppointmentId,
+                    Diagnosis = dto.Diagnosis ?? string.Empty,
+                    MedicinesJson = JsonSerializer.Serialize(dto.Medicines ?? new List<MedicineDto>()),
+                    ChiefComplaints = dto.ChiefComplaints ?? string.Empty,
+                    PastHistory = dto.PastHistory ?? string.Empty,
+                    Examination = dto.Examination ?? string.Empty,
+                    Advice = dto.Advice ?? string.Empty
+                };
+                _context.Prescriptions.Add(prescription);
+            }
+
+            appointment.AppointmentStatus = "Completed";
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Prescription saved and appointment completed successfully" });
         }
 
         private bool AppointmentExists(int id)

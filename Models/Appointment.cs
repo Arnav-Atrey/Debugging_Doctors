@@ -28,4 +28,7 @@ public partial class Appointment
     public virtual Doctor Doctor { get; set; } = null!;
 
     public virtual Patient Patient { get; set; } = null!;
+
+    // Existing Appointment class...
+    public virtual Prescription Prescription { get; set; }  // 1:1 relationship (optional: use ICollection<Prescription> for 1:M)s
 }

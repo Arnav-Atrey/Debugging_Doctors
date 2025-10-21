@@ -23,6 +23,8 @@ public partial class DebuggingDoctorsContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
+    public DbSet<Prescription> Prescriptions { get; set; }  // New DbSet
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlServer("Name=ConnectionStrings:mycon");
 
@@ -106,7 +108,17 @@ public partial class DebuggingDoctorsContext : DbContext
             entity.Property(e => e.Role).HasMaxLength(20);
         });
 
-        OnModelCreatingPartial(modelBuilder);
+    
+
+        // Configure Prescription relationship
+        modelBuilder.Entity<Prescription>()
+            .HasOne(p => p.Appointment)
+            .WithOne(a => a.Prescription)  // 1:1 (change to WithMany() for 1:M)
+            .HasForeignKey<Prescription>(p => p.AppointmentID)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        base.OnModelCreating(modelBuilder);
+    
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
