@@ -2,27 +2,6 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-<<<<<<< HEAD
-export interface AppointmentBookingDto {
-  patientId: number;
-  doctorId: number;
-  appointmentDate: string;
-  symptoms?: string;
-}
-
-export interface TimeSlot {
-  time: string;
-  available: boolean;
-}
-
-export interface AppointmentCompletionDto {
-  diagnosis?: string;
-  medicines?: string;
-  invoiceAmount?: number;
-}
-
-=======
->>>>>>> new-feature-branch
 export interface AppointmentResponseDto {
   appointmentId: number;
   patientId: number;
@@ -76,17 +55,9 @@ export class AppointmentService {
     return this.http.get<AppointmentResponseDto[]>(`${this.apiUrl}/api/Appointments/patient/${patientId}`);
   }
 
-<<<<<<< HEAD
 getAvailableSlots(doctorId: number, date: string): Observable<TimeSlot[]> {
   return this.http.get<TimeSlot[]>(`${this.apiUrl}/doctor/${doctorId}/available-slots?date=${date}`);
 }
-=======
-  getAvailableSlots(doctorId: number, date: string): Observable<string[]> {
-    return this.http.get<string[]>(`${this.apiUrl}/api/Appointments/doctor/${doctorId}/available-slots`, {
-      params: { date }
-    });
-  }
->>>>>>> new-feature-branch
 
   bookAppointment(bookingData: AppointmentBookingDto): Observable<AppointmentResponseDto> {
     return this.http.post<AppointmentResponseDto>(`${this.apiUrl}/api/Appointments/book`, bookingData);
