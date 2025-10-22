@@ -1,0 +1,102 @@
+<div class="container min-vh-100 d-flex align-items-center justify-content-center">
+  <div class="card p-4 shadow" style="max-width: 400px; width: 100%;">
+    <h2 class="card-title text-center mb-4">Register</h2>
+    
+    <!-- Success Alert -->
+    <div *ngIf="successMessage" class="alert alert-success alert-dismissible fade show" role="alert">
+      {{ successMessage }}
+      <button type="button" class="btn-close" (click)="successMessage = ''" aria-label="Close"></button>
+    </div>
+    
+    <!-- Error Alert -->
+    <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
+      {{ errorMessage }}
+      <button type="button" class="btn-close" (click)="errorMessage = ''" aria-label="Close"></button>
+    </div>
+    
+    <form [formGroup]="registrationForm" (ngSubmit)="onSubmit()">
+      <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input
+          type="email"
+          id="email"
+          formControlName="email"
+          class="form-control"
+          [class.is-invalid]="registrationForm.get('email')?.invalid && registrationForm.get('email')?.touched"
+        />
+        <div *ngIf="registrationForm.get('email')?.invalid && registrationForm.get('email')?.touched" class="invalid-feedback">
+          <div *ngIf="registrationForm.get('email')?.errors?.['required']">Email is required.</div>
+          <div *ngIf="registrationForm.get('email')?.errors?.['email']">Invalid email format.</div>
+        </div>
+        <div *ngIf="registrationForm.get('email')?.errors?.['doctorDomain'] && registrationForm.get('email')?.touched" class="invalid-feedback">
+          Doctor email must end with @swasthatech.com.
+        </div>
+      </div>
+      
+      <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input
+          type="password"
+          id="password"
+          formControlName="pswdHash"
+          class="form-control"
+          [class.is-invalid]="registrationForm.get('pswdHash')?.invalid && registrationForm.get('pswdHash')?.touched"
+        >
+        <!-- <div *ngIf="registrationForm.get('pswdHash')?.invalid && registrationForm.get('pswdHash')?.touched" class="invalid-feedback">
+          Password is required.
+        </div> -->
+        <div *ngIf="getPasswordError()" class="error">
+          {{ getPasswordError() }}
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="confirmPassword" class="form-label">Confirm Password</label>
+        <input
+          type="password"
+          id="confirmPassword"
+          formControlName="confirmPassword"
+          class="form-control"
+          [class.is-invalid]="registrationForm.get('confirmPassword')?.invalid && registrationForm.get('confirmPassword')?.touched"
+        >
+        <div *ngIf="registrationForm.get('confirmPassword')?.invalid && registrationForm.get('confirmPassword')?.touched" class="invalid-feedback">
+          <div *ngIf="registrationForm.get('confirmPassword')?.errors?.['required']">Confirm Password is required.</div>
+          <div *ngIf="registrationForm.get('confirmPassword')?.errors?.['passwordMismatch']">Passwords do not match.</div>
+        </div>
+      </div>
+      
+      <div class="mb-3">
+        <label for="role" class="form-label">Role</label>
+        <select
+          id="role"
+          formControlName="role"
+          class="form-select"
+          [class.is-invalid]="registrationForm.get('role')?.invalid && registrationForm.get('role')?.touched"
+        >
+          <option value="" disabled>Select a role</option>
+          <!-- <option value="Admin">Admin</option> -->
+          <option value="Doctor">Doctor</option>
+          <option value="Patient">Patient</option>
+        </select>
+        <div *ngIf="registrationForm.get('role')?.invalid && registrationForm.get('role')?.touched" class="invalid-feedback">
+          Role is required.
+        </div>
+      </div>
+
+      <!-- Add CAPTCHA Component -->
+      <app-captcha (captchaValidated)="onCaptchaValidated($event)"></app-captcha>
+      
+      <button
+        type="submit"
+        class="btn btn-primary w-100"
+        [disabled]="registrationForm.invalid"
+      >
+        Register
+      </button>
+    </form>
+    
+    <p class="mt-3 text-center">
+      Already have an account? <a routerLink="/login" class="text-primary text-decoration-underline">Login</a>
+    </p>
+  </div>
+</div>

@@ -1,0 +1,65 @@
+<div class="container mt-4">
+  <h2 class="mb-4">My Appointments</h2>
+
+  <div *ngIf="successMessage" class="alert alert-success alert-dismissible fade show" role="alert">
+    {{ successMessage }}
+    <button type="button" class="btn-close" (click)="successMessage = ''" aria-label="Close"></button>
+  </div>
+
+  <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
+    {{ errorMessage }}
+    <button type="button" class="btn-close" (click)="errorMessage = ''" aria-label="Close"></button>
+  </div>
+
+  <div *ngIf="isLoading" class="text-center">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
+  <div *ngIf="!isLoading && appointments.length === 0" class="alert alert-info">
+    You have no appointments yet. <a routerLink="/patient/doctors" class="alert-link">Book an appointment</a>
+  </div>
+
+  <div class="row" *ngIf="!isLoading && appointments.length > 0">
+    <div class="col-md-6 mb-3" *ngFor="let appointment of appointments">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <h5 class="card-title">{{ appointment.doctorName }}</h5>
+            <span class="badge" [ngClass]="getStatusBadgeClass(appointment.appointmentStatus)">
+              {{ appointment.appointmentStatus }}
+            </span>
+          </div>
+          <p class="card-text">
+            <strong>Specialization:</strong> {{ appointment.specialisation }}<br>
+            <strong>Date:</strong> {{ appointment.appointmentDate | date: 'medium' }}<br>
+            <strong>Symptoms:</strong> {{ appointment.symptoms || 'N/A' }}<br>
+            <span *ngIf="appointment.diagnosis">
+              <strong>Diagnosis:</strong> {{ appointment.diagnosis }}<br>
+            </span>
+            <span *ngIf="appointment.medicines">
+              <strong>Medicines:</strong> {{ appointment.medicines }}<br>
+            </span>
+            <span *ngIf="appointment.invoiceAmount">
+              <strong>Invoice Amount:</strong> ₹{{ appointment.invoiceAmount }}<br>
+              <strong>Payment Status:</strong> 
+              <span class="badge" [ngClass]="getPaymentBadgeClass(appointment.invoiceStatus)">
+                {{ appointment.invoiceStatus }}
+              </span>
+            </span>
+          </p>
+          
+          <!-- Only show cancel button, no payment button -->
+          <button
+            *ngIf="canCancel(appointment.appointmentStatus)"
+            class="btn btn-sm btn-danger"
+            (click)="cancelAppointment(appointment.appointmentId)"
+          >
+            Cancel Appointment
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

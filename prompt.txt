@@ -1,0 +1,424 @@
+Okay. So now, i want to create a page when a doctor logs in. 
+When a doctor logs in, he should see his home page where he has access to 4 tabs: profile details, prev appointment details, 
+upcoming appointments, accepting or rejecting any appointments booked by patients. 
+For this, should i create a seperate service.ts for doctors and in that should i create the components needed? Ans also what dtos
+do i need to design for this purpose? I am attaching the doctorscontroller.cs, appointmentcontroller.cs, patientcontroller.cs and the appointment.cs file for this:
+//Doctors controller
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Hospital_Management_system.Models;
+
+namespace Hospital_Management_system.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class DoctorsController : ControllerBase
+    {
+        private readonly DebuggingDoctorsContext _context;
+
+        public DoctorsController(DebuggingDoctorsContext context)
+        {
+            _context = context;
+        }
+
+        // GET: api/Doctors
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Doctor>>> GetDoctors()
+        {
+            return await _context.Doctors.ToListAsync();
+        }
+
+        // GET: api/Doctors/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Doctor>> GetDoctor(int id)
+        {
+            var doctor = await _context.Doctors.FindAsync(id);
+
+            if (doctor == null)
+            {
+                return NotFound();
+            }
+
+            return doctor;
+        }
+
+        // PUT: api/Doctors/5
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutDoctor(int id, Doctor doctor)
+        {
+            if (id != doctor.DocId)
+            {
+                return BadRequest();
+            }
+
+            _context.Entry(doctor).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!DoctorExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
+        // POST: api/Doctors
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPost]
+        public async Task<ActionResult<Doctor>> PostDoctor(Doctor doctor)
+        {
+            _context.Doctors.Add(doctor);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction("GetDoctor", new { id = doctor.DocId }, doctor);
+        }
+
+        // DELETE: api/Doctors/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteDoctor(int id)
+        {
+            var doctor = await _context.Doctors.FindAsync(id);
+            if (doctor == null)
+            {
+                return NotFound();
+            }
+
+            _context.Doctors.Remove(doctor);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        private bool DoctorExists(int id)
+        {
+            return _context.Doctors.Any(e => e.DocId == id);
+        }
+    }
+}
+
+appointmentcontroller.cs:
+//Appointments controller
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Hospital_Management_system.Models;
+
+namespace Hospital_Management_system.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class AppointmentsController : ControllerBase
+    {
+        private readonly DebuggingDoctorsContext _context;
+
+        public AppointmentsController(DebuggingDoctorsContext context)
+        {
+            _context = context;
+        }
+
+        // GET: api/Appointments
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Appointment>>> GetAppointments()
+        {
+            return await _context.Appointments.ToListAsync();
+        }
+
+        // GET: api/Appointments/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Appointment>> GetAppointment(int id)
+        {
+            var appointment = await _context.Appointments.FindAsync(id);
+
+            if (appointment == null)
+            {
+                return NotFound();
+            }
+
+            return appointment;
+        }
+
+        // PUT: api/Appointments/5
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutAppointment(int id, Appointment appointment)
+        {
+            if (id != appointment.AppointmentId)
+            {
+                return BadRequest();
+            }
+
+            _context.Entry(appointment).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!AppointmentExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
+        // POST: api/Appointments
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPost]
+        public async Task<ActionResult<Appointment>> PostAppointment(Appointment appointment)
+        {
+            _context.Appointments.Add(appointment);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction("GetAppointment", new { id = appointment.AppointmentId }, appointment);
+        }
+
+        // DELETE: api/Appointments/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteAppointment(int id)
+        {
+            var appointment = await _context.Appointments.FindAsync(id);
+            if (appointment == null)
+            {
+                return NotFound();
+            }
+
+            _context.Appointments.Remove(appointment);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        private bool AppointmentExists(int id)
+        {
+            return _context.Appointments.Any(e => e.AppointmentId == id);
+        }
+    }
+}
+
+patientController.cs:
+//updated controller of patients 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Hospital_Management_system.Models;
+using Hospital_Management_system.Models.DTOs;
+
+namespace Hospital_Management_system.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class PatientsController : ControllerBase
+    {
+        private readonly DebuggingDoctorsContext _context;
+
+        public PatientsController(DebuggingDoctorsContext context)
+        {
+            _context = context;
+        }
+
+        // GET: api/Patients
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<PatientDto>>> GetPatients()
+        {
+            var patients = await _context.Patients.ToListAsync();
+
+            // Map to PatientDto and calculate age
+            var patientDtos = patients.Select(patient => new PatientDto
+            {
+                FullName = patient.FullName,
+                Gender = patient.Gender,
+                ContactNo = patient.ContactNo,
+                Address = patient.Address,
+                Aadhaar_no = patient.Aadhaar_no,
+                //Age = CalculateAge(patient.DOB)
+            }).ToList();
+
+            return patientDtos;
+        }
+
+        // GET: api/Patients/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<PatientDto>> GetPatient(int id)
+        {
+            var patient = await _context.Patients.FindAsync(id);
+
+            if (patient == null)
+            {
+                return NotFound();
+            }
+
+            // Map to PatientDto and calculate age
+            var patientDto = new PatientDto
+            {
+                FullName = patient.FullName,
+                Gender = patient.Gender,
+                ContactNo = patient.ContactNo,
+                Address = patient.Address,
+                Aadhaar_no = patient.Aadhaar_no,
+                //Age = CalculateAge(patient.DOB)
+            };
+
+            return patientDto;
+        }
+
+        // PUT: api/Patients/5
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutPatient(int id, Patient patient)
+        {
+            if (id != patient.PatientId)
+            {
+                return BadRequest();
+            }
+
+            _context.Entry(patient).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!PatientExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
+        // POST: api/Patients
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPost]
+        public async Task<ActionResult<Patient>> PostPatient(Patient patient)
+        {
+            _context.Patients.Add(patient);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction("GetPatient", new { id = patient.PatientId }, patient);
+        }
+
+        // DELETE: api/Patients/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeletePatient(int id)
+        {
+            var patient = await _context.Patients.FindAsync(id);
+            if (patient == null)
+            {
+                return NotFound();
+            }
+
+            _context.Patients.Remove(patient);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        private bool PatientExists(int id)
+        {
+            return _context.Patients.Any(e => e.PatientId == id);
+        }
+
+        // Utility function to calculate age from DOB
+        private int CalculateAge(DateTime? dob)
+        {
+            if (!dob.HasValue) return 0;
+
+            var today = DateTime.Today;
+            var age = today.Year - dob.Value.Year;
+            if (dob.Value.Date > today.AddYears(-age)) age--; // Adjust if birthday hasn't occurred yet
+            return age;
+        }
+    }
+}
+
+
+
+Appointment.cs:
+using System;
+using System.Collections.Generic;
+
+namespace Hospital_Management_system.Models;
+
+public partial class Appointment
+{
+    public int AppointmentId { get; set; }
+
+    public int PatientId { get; set; }
+
+    public int DoctorId { get; set; }
+
+    public string AppointmentStatus { get; set; } = null!;
+
+    public DateTime AppointmentDate { get; set; }
+
+    public string? Symptoms { get; set; }
+
+    public string? Diagnosis { get; set; }
+
+    public string? Medicines { get; set; }
+
+    public string InvoiceStatus { get; set; } = null!;
+
+    public decimal? InvoiceAmount { get; set; }
+
+    public virtual Doctor Doctor { get; set; } = null!;
+
+    public virtual Patient Patient { get; set; } = null!;
+}
+
+
+
+
+
+
+
+I am getting this error when i try to register a new patient through patient details:
+
+:7090/api/Users/9/patient-details:1   Failed to load resource: the server responded with a status of 404 ()
+
+And on the UI the error message is: User not found. Please register again.
+
+Modules:
+
+patient-details.ts:
+
+

@@ -1,0 +1,141 @@
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="card-title mb-4">
+              Profile: {{ patientPrefix }} {{ profileForm.value.fullName }}
+            </h2>
+            <button 
+              type="button" 
+              class="btn btn-primary"
+              (click)="toggleEditMode()"
+              *ngIf="!isEditMode"
+            >
+              <i class="bi bi-pencil me-2"></i>Edit Profile
+            </button>
+          </div>
+
+          <div *ngIf="successMessage" class="alert alert-success alert-dismissible fade show">
+            {{ successMessage }}
+            <button type="button" class="btn-close" (click)="successMessage = ''" aria-label="Close"></button>
+          </div>
+
+          <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show">
+            {{ errorMessage }}
+            <button type="button" class="btn-close" (click)="errorMessage = ''" aria-label="Close"></button>
+          </div>
+
+          <div *ngIf="isLoading" class="text-center">
+            <div class="spinner-border" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+
+          <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" *ngIf="!isLoading">
+            <div class="mb-3">
+              <label for="fullName" class="form-label">Full Name *</label>
+              <input
+                type="text"
+                id="fullName"
+                formControlName="fullName"
+                class="form-control"
+                [class.is-invalid]="profileForm.get('fullName')?.invalid && profileForm.get('fullName')?.touched"
+              >
+              <div *ngIf="profileForm.get('fullName')?.invalid && profileForm.get('fullName')?.touched" class="invalid-feedback">
+                Full name is required.
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="dob" class="form-label">Date of Birth</label>
+              <input
+                type="date"
+                id="dob"
+                formControlName="dob"
+                class="form-control"
+              >
+            </div>
+
+            <div class="mb-3">
+              <label for="gender" class="form-label">Gender</label>
+              <select id="gender" formControlName="gender" class="form-select">
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="contactNo" class="form-label">Contact Number</label>
+              <input
+                type="tel"
+                id="contactNo"
+                formControlName="contactNo"
+                class="form-control"
+                placeholder="10-digit number"
+                [class.is-invalid]="profileForm.get('contactNo')?.invalid && profileForm.get('contactNo')?.touched"
+              >
+              <div *ngIf="profileForm.get('contactNo')?.invalid && profileForm.get('contactNo')?.touched" class="invalid-feedback">
+                Please enter a valid 10-digit contact number.
+              </div>
+              <div *ngIf="profileForm.get('contactNo')?.errors?.['contactTaken']" class="invalid-feedback d-block">
+                This contact number is already registered.
+              </div>
+                            
+            </div>
+            
+
+            <div class="mb-3">
+              <label for="address" class="form-label">Address</label>
+              <textarea
+                id="address"
+                formControlName="address"
+                class="form-control"
+                rows="3"
+              ></textarea>
+            </div>
+
+            <!-- <div class="mb-3">
+              <label for="aadhaarNo" class="form-label">Aadhaar Number</label>
+              <input
+                type="text"
+                id="aadhaarNo"
+                formControlName="aadhaarNo"
+                class="form-control"
+                placeholder="12-digit Aadhaar number"
+                [class.is-invalid]="profileForm.get('aadhaarNo')?.invalid && profileForm.get('aadhaarNo')?.touched"
+              >
+              <div *ngIf="profileForm.get('aadhaarNo')?.invalid && profileForm.get('aadhaarNo')?.touched" class="invalid-feedback">
+                Please enter a valid 12-digit Aadhaar number.
+              </div>
+              <div *ngIf="profileForm.get('aadhaarNo')?.errors?.['aadhaarTaken']" class="invalid-feedback d-block">
+                This Aadhaar number is already registered.
+              </div>
+            </div> -->
+
+            <div class="d-flex gap-2" *ngIf="isEditMode">
+              <button 
+                type="submit" 
+                class="btn btn-success"
+                [disabled]="profileForm.invalid || isLoading"
+              >
+                <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+                Save Changes
+              </button>
+              <button 
+                type="button" 
+                class="btn btn-secondary"
+                (click)="toggleEditMode()"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

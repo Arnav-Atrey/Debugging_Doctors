@@ -1,0 +1,147 @@
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="card-title mb-0">Profile: Dr. {{ profileForm.value.fullName }}</h2>
+            <button 
+              type="button" 
+              class="btn btn-primary"
+              (click)="toggleEditMode()"
+              *ngIf="!isEditMode"
+            >
+              <i class="bi bi-pencil me-2"></i>Edit Profile
+            </button>
+          </div>
+
+          <div *ngIf="successMessage" class="alert alert-success alert-dismissible fade show">
+            {{ successMessage }}
+            <button type="button" class="btn-close" (click)="successMessage = ''" aria-label="Close"></button>
+          </div>
+
+          <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show">
+            {{ errorMessage }}
+            <button type="button" class="btn-close" (click)="errorMessage = ''" aria-label="Close"></button>
+          </div>
+
+          <div *ngIf="isLoading" class="text-center">
+            <div class="spinner-border" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+
+          <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" *ngIf="!isLoading">
+            <div class="mb-3">
+              <label for="fullName" class="form-label">Full Name *</label>
+              <input
+                type="text"
+                id="fullName"
+                formControlName="fullName"
+                class="form-control"
+                [class.is-invalid]="profileForm.get('fullName')?.invalid && profileForm.get('fullName')?.touched"
+              >
+              <div *ngIf="profileForm.get('fullName')?.invalid && profileForm.get('fullName')?.touched" class="invalid-feedback">
+                Full name is required.
+              </div>
+            </div>
+
+            <div class="mb-3">
+            <label for="specialisation" class="form-label">Specialisation</label>
+            <select
+              id="specialisation"
+              formControlName="specialisation"
+              class="form-select"
+            >
+              <option value="">Select Specialisation</option>
+              <option value="Cardiology">Cardiology</option>
+              <option value="Dermatology">Dermatology</option>
+              <option value="Endocrinology">Endocrinology</option>
+              <option value="Gastroenterology">Gastroenterology</option>
+              <option value="General Medicine">General Medicine</option>
+              <option value="General Surgery">General Surgery</option>
+              <option value="Gynecology">Gynecology</option>
+              <option value="Neurology">Neurology</option>
+              <option value="Oncology">Oncology</option>
+              <option value="Ophthalmology">Ophthalmology</option>
+              <option value="Orthopedics">Orthopedics</option>
+              <option value="Pediatrics">Pediatrics</option>
+              <option value="Psychiatry">Psychiatry</option>
+              <option value="Pulmonology">Pulmonology</option>
+              <option value="Radiology">Radiology</option>
+              <option value="Urology">Urology</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <!-- Show text input if "Other" is selected -->
+          <div class="mb-3" *ngIf="showOtherSpecialisation && isEditMode">
+            <label for="customSpecialisation" class="form-label">Please specify your specialisation</label>
+            <input
+              type="text"
+              id="customSpecialisation"
+              class="form-control"
+              placeholder="Enter your specialisation"
+              (input)="profileForm.patchValue({specialisation: $any($event.target).value})"
+            >
+          </div>
+
+            <div class="mb-3">
+              <label for="hpid" class="form-label">Health Professional ID</label>
+              <input
+                type="text"
+                id="hpid"
+                formControlName="hpid"
+                class="form-control"
+              >
+            </div>
+
+            <!-- <div class="mb-3">
+              <label for="availability" class="form-label">Availability</label>
+              <input
+                type="text"
+                id="availability"
+                formControlName="availability"
+                class="form-control"
+                placeholder="e.g., Mon-Fri 9AM-5PM"
+              >
+            </div> -->
+
+            <div class="mb-3">
+              <label for="contactNo" class="form-label">Contact Number</label>
+              <input
+                type="tel"
+                id="contactNo"
+                formControlName="contactNo"
+                class="form-control"
+                placeholder="10-digit number"
+                [class.is-invalid]="profileForm.get('contactNo')?.invalid && profileForm.get('contactNo')?.touched"
+              >
+              <div *ngIf="profileForm.get('contactNo')?.invalid && profileForm.get('contactNo')?.touched" class="invalid-feedback">
+                Please enter a valid 10-digit contact number.
+              </div>
+            </div>
+
+            <div class="d-flex gap-2" *ngIf="isEditMode">
+              <button 
+                type="submit" 
+                class="btn btn-success"
+                [disabled]="profileForm.invalid || isLoading"
+              >
+                <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+                Save Changes
+              </button>
+              <button 
+                type="button" 
+                class="btn btn-secondary"
+                (click)="toggleEditMode()"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,43 @@
+I am facing the below issue while trying to update profiles of doctors and patients:
+
+For doctors:
+Failed to load resource: the server responded with a status of 400 ()
+profile.ts:134  Error updating profile: HttpErrorResponseerror: {type: 'https://tools.ietf.org/html/rfc9110#section-15.5.1', title: 'One or more validation errors occurred.', status: 400, errors: {…}, traceId: '00-e310c55f74589acc0f682b430846ca1d-776a7d3784ef380f-00'}headers: _HttpHeaders {headers: undefined, normalizedNames: Map(0), lazyUpdate: null, lazyInit: ƒ}message: "Http failure response for https://localhost:7090/api/Doctors/1: 400 OK"name: "HttpErrorResponse"ok: falseredirected: undefinedstatus: 400statusText: "OK"type: undefinedurl: "https://localhost:7090/api/Doctors/1"[[Prototype]]: HttpResponseBase
+error @ profile.ts:134
+ConsumerObserver2.error @ Subscriber.js:107
+Subscriber2._error @ Subscriber.js:67
+Subscriber2.error @ Subscriber.js:43
+Subscriber2._error @ Subscriber.js:67
+Subscriber2.error @ Subscriber.js:43
+Subscriber2._error @ Subscriber.js:67
+Subscriber2.error @ Subscriber.js:43
+Subscriber2._error @ Subscriber.js:67
+Subscriber2.error @ Subscriber.js:43
+Subscriber2._error @ Subscriber.js:67
+Subscriber2.error @ Subscriber.js:43
+onLoad @ module.mjs:2653
+invokeTask @ zone.js:431
+(anonymous) @ debug_node.mjs:16525
+onInvokeTask @ debug_node.mjs:16525
+invokeTask @ zone.js:430
+onInvokeTask @ debug_node.mjs:16848
+invokeTask @ zone.js:430
+runTask @ zone.js:161
+invokeTask @ zone.js:515
+invokeTask @ zone.js:1141
+globalCallback @ zone.js:1184
+globalZoneAwareCallback @ zone.js:1205
+:7090/api/Doctors/1:1   Failed to load resource: the server responded with a status of 400 ()
+profile.ts:134  Error updating profile: HttpErrorResponseerror: {type: 'https://tools.ietf.org/html/rfc9110#section-15.5.1', title: 'One or more validation errors occurred.', status: 400, errors: {…}, traceId: '00-c4f933dd43241940ae6b174c048bc5c3-a657c70f2a48f47d-00'}headers: _HttpHeaders {headers: undefined, normalizedNames: Map(0), lazyUpdate: null, lazyInit: ƒ}message: "Http failure response for https://localhost:7090/api/Doctors/1: 400 OK"name: "HttpErrorResponse"ok: falseredirected: undefinedstatus: 400statusText: "OK"type: undefinedurl: "https://localhost:7090/api/Doctors/1"[[Prototype]]: HttpResponseBase
+
+For patients:
+Failed to load resource: the server responded with a status of 400 ()
+profile.ts:134  Error updating profile: HttpErrorResponseerror: {type: 'https://tools.ietf.org/html/rfc9110#section-15.5.1', title: 'One or more validation errors occurred.', status: 400, errors: {…}, traceId: '00-69dd903deaa39a00e9b22d3395b8cd32-1d3da60d552f6ebb-00'}headers: _HttpHeaders {headers: undefined, normalizedNames: Map(0), lazyUpdate: null, lazyInit: ƒ}message: "Http failure response for https://localhost:7090/api/Patients/2: 400 OK"name: "HttpErrorResponse"ok: falseredirected: undefinedstatus: 400statusText: "OK"type: undefinedurl: "https://localhost:7090/api/Patients/2"[[Prototype]]: HttpResponseBase
+
+
+
+It is still giving that error. Anyway, we will come to that later. Can you help me with the below implementations meanwhile:
+1) Invoice for patient, payment status should be updated from patient side
+2) While booking, time should come as dropdown for different slots, and it should only display the slots that are not taken
+3) Validations for doctor, patient phone number to ensure an existing phone number is NOT entered -- same thing to be applied for HPID, Aadhar_No. 
+4) Doctor Photo

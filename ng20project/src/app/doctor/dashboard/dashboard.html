@@ -1,0 +1,235 @@
+<div class="container mt-4">
+  <h2 class="mb-4">Doctor Dashboard</h2>
+
+  <!-- Alerts -->
+  <div *ngIf="successMessage" class="alert alert-success alert-dismissible fade show" data-debug="success-message">
+    {{ successMessage }}
+    <button type="button" class="btn-close" (click)="successMessage = ''" aria-label="Close"></button>
+  </div>
+  <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" data-debug="error-message">
+    {{ errorMessage }}
+    <button type="button" class="btn-close" (click)="errorMessage = ''" aria-label="Close"></button>
+  </div>
+
+  <!-- Tabs -->
+  <ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+      <a class="nav-link" [class.active]="activeTab === 'requests'" (click)="switchTab('requests')" style="cursor: pointer;">
+        New Requests <span class="badge bg-warning text-dark ms-2">{{ pendingAppointments.length }}</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" [class.active]="activeTab === 'upcoming'" (click)="switchTab('upcoming')" style="cursor: pointer;">
+        Upcoming Appointments <span class="badge bg-success ms-2">{{ upcomingAppointments.length }}</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" [class.active]="activeTab === 'previous'" (click)="switchTab('previous')" style="cursor: pointer;">
+        Previous Appointments <span class="badge bg-secondary ms-2">{{ previousAppointments.length }}</span>
+      </a>
+    </li>
+  </ul>
+
+  <!-- Spinner -->
+  <div *ngIf="isLoading" class="text-center" data-debug="loading-spinner">
+    <div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>
+  </div>
+
+  <!-- Tab Content -->
+  <div *ngIf="!isLoading">
+
+    <!-- Requests -->
+    <div *ngIf="activeTab === 'requests'" data-debug="requests-tab">
+      <div *ngIf="pendingAppointments.length === 0" class="alert alert-info">No pending appointment requests.</div>
+      <div class="row" *ngIf="pendingAppointments.length > 0">
+        <div class="col-md-6 mb-3" *ngFor="let appointment of pendingAppointments" [attr.data-appointment-id]="appointment.appointmentId">
+          <div class="card border-warning">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <h5 class="card-title mb-0">{{ appointment.patientName || 'N/A' }}</h5>
+                <span class="badge bg-warning text-dark">Pending</span>
+              </div>
+              <p class="card-text">
+                <strong>Date:</strong> {{ formatDate(appointment.appointmentDate) }}<br>
+                <strong>Symptoms:</strong> {{ appointment.symptoms || 'N/A' }}
+              </p>
+              <div class="d-flex gap-2">
+                <button class="btn btn-success btn-sm" (click)="confirmAppointment(appointment.appointmentId)">
+                  <i class="bi bi-check-circle me-1"></i>Accept
+                </button>
+                <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal" 
+                        (click)="openRejectModal(appointment.appointmentId)">
+                  <i class="bi bi-x-circle me-1"></i>Reject
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upcoming -->
+    <div *ngIf="activeTab === 'upcoming'" data-debug="upcoming-tab">
+      <div *ngIf="upcomingAppointments.length === 0" class="alert alert-info">No upcoming appointments.</div>
+      <div class="row" *ngIf="upcomingAppointments.length > 0">
+        <div class="col-md-6 mb-3" *ngFor="let appointment of upcomingAppointments" [attr.data-appointment-id]="appointment.appointmentId">
+          <div class="card border-success">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <h5 class="card-title mb-0">{{ appointment.patientName || 'N/A' }}</h5>
+                <span class="badge bg-success">Confirmed</span>
+              </div>
+              <p class="card-text">
+                <strong>Date:</strong> {{ formatDate(appointment.appointmentDate) }}<br>
+                <strong>Symptoms:</strong> {{ appointment.symptoms || 'N/A' }}
+              </p>
+              <div class="d-flex gap-2">
+                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#completeModal"
+                        (click)="openCompleteModal(appointment)">
+                  <i class="bi bi-check2-square me-1"></i>Mark as Completed
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" (click)="openPrescriptionForm(appointment)">
+                  <i class="bi bi-file-earmark-medical me-1"></i>Complete with Prescription
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Previous -->
+    <div *ngIf="activeTab === 'previous'" data-debug="previous-tab">
+      <div *ngIf="previousAppointments.length === 0" class="alert alert-info">No previous appointments.</div>
+      <div class="row" *ngIf="previousAppointments.length > 0">
+        <div class="col-md-6 mb-3" *ngFor="let appointment of previousAppointments" [attr.data-appointment-id]="appointment.appointmentId">
+          <div class="card border-secondary">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <h5 class="card-title mb-0">{{ appointment.patientName || 'N/A' }}</h5>
+              </div>
+              <p class="card-text">
+                <strong>Date:</strong> {{ formatDate(appointment.appointmentDate) }}<br>
+                <strong>Symptoms:</strong> {{ appointment.symptoms || 'N/A' }}<br>
+                <strong>Diagnosis:</strong> {{ appointment.diagnosis || 'N/A' }}<br>
+                <strong>Medicines:</strong> {{ appointment.medicines || 'N/A' }}<br>
+                <strong>Invoice:</strong> {{ appointment.invoiceAmount ? '₹' + appointment.invoiceAmount : 'N/A' }}<br>
+                <strong>Payment Status:</strong> 
+                <span class="badge" [ngClass]="getPaymentBadgeClass(appointment.invoiceStatus)">
+                  {{ appointment.invoiceStatus }}
+                </span>
+              </p>
+              <ng-container *ngIf="appointment.invoiceStatus === 'Pending'">
+                <button *ngIf="appointment.invoiceAmount" class="btn btn-success btn-sm"
+                        (click)="markAsPaid(appointment.appointmentId)">
+                  <i class="bi bi-cash me-1"></i>Mark as Paid
+                </button>
+                <span *ngIf="!appointment.invoiceAmount" class="badge bg-danger">Cancelled</span>
+              </ng-container>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Prescription Module -->
+    <div class="mt-4" *ngIf="showPrescriptionForm" data-debug="prescription-form">
+      <app-prescription
+        [appointmentId]="selectedPrescriptionAppointmentId!"
+        [doctorId]="doctorId"
+        [patient]="patientData"
+        [doctor]="doctorData"
+        (save)="savePrescription($event)"
+        (cancel)="cancelPrescription()"
+        [attr.data-patient-name]="patientData.name"
+        [attr.data-patient-age]="patientData.age"
+        [attr.data-doctor-name]="doctorData.name"
+        [attr.data-doctor-info]="doctorData.info">
+      </app-prescription>
+    </div>
+
+  </div>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Reject Appointment</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="rejectionReason" class="form-label">Reason for Rejection (Optional)</label>
+          <textarea
+            id="rejectionReason"
+            class="form-control"
+            rows="3"
+            [(ngModel)]="rejectionReason"
+            placeholder="Enter reason for rejection..."
+          ></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" data-bs-dismiss="modal" (click)="rejectAppointment()">
+          Reject Appointment
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Complete Appointment Modal -->
+<div class="modal fade" id="completeModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Complete Appointment</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label"><strong>Patient:</strong> {{ selectedCompletionAppointment?.patientName || 'N/A' }}</label>
+        </div>
+        <div class="mb-3">
+          <label for="diagnosis" class="form-label">Diagnosis</label>
+          <textarea
+            id="diagnosis"
+            class="form-control"
+            rows="3"
+            [(ngModel)]="completionData.diagnosis"
+            placeholder="Enter diagnosis..."
+          ></textarea>
+        </div>
+        <div class="mb-3">
+          <label for="medicines" class="form-label">Medicines Prescribed</label>
+          <textarea
+            id="medicines"
+            class="form-control"
+            rows="3"
+            [(ngModel)]="completionData.medicines"
+            placeholder="Enter medicines..."
+          ></textarea>
+        </div>
+        <div class="mb-3">
+          <label for="invoiceAmount" class="form-label">Invoice Amount (₹)</label>
+          <input
+            type="number"
+            id="invoiceAmount"
+            class="form-control"
+            [(ngModel)]="completionData.invoiceAmount"
+            placeholder="Enter amount..."
+          >
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" (click)="completeAppointment()">
+          Complete Appointment
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
