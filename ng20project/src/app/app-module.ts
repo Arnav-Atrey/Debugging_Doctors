@@ -18,11 +18,13 @@ import { DoctorDashboardComponent } from './doctor/dashboard/dashboard';
 import { NavbarComponent } from './shared/navbar/navbar';
 import { PatientProfileComponent } from './patient/profile/profile';
 import { DoctorProfileComponent } from './doctor/profile/profile';
+import { AI } from './ai/ai';
 
 @NgModule({
   declarations: [
     App,
     PatientDetails,
+    AI,
   ],
   imports: [
     BrowserModule,
