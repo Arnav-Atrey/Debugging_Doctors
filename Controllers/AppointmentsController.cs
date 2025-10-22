@@ -534,6 +534,7 @@ namespace Hospital_Management_system.Controllers
         }
 
         // GET: api/Appointments/doctor/{doctorId}/available-slots?date=2025-10-10
+        // GET: api/Appointments/doctor/{doctorId}/available-slots?date=2025-10-10
         [HttpGet("doctor/{doctorId}/available-slots")]
         public async Task<ActionResult<object>> GetAvailableSlots(int doctorId, [FromQuery] string date)
         {
@@ -542,6 +543,7 @@ namespace Hospital_Management_system.Controllers
                 return BadRequest(new { message = "Invalid date format" });
             }
 
+            // Define time slots (9 AM to 5 PM, 30-minute intervals)
             var allSlots = new List<string>();
             for (int hour = 9; hour < 17; hour++)
             {
@@ -549,6 +551,7 @@ namespace Hospital_Management_system.Controllers
                 allSlots.Add($"{hour:D2}:30");
             }
 
+            // Get booked slots for this doctor on this date
             var bookedSlots = await _context.Appointments
                 .Where(a => a.DoctorId == doctorId
                     && a.AppointmentDate.Date == selectedDate.Date
@@ -556,16 +559,12 @@ namespace Hospital_Management_system.Controllers
                 .Select(a => a.AppointmentDate.ToString("HH:mm"))
                 .ToListAsync();
 
-<<<<<<< HEAD
             // Return all slots with availability status
             var slotsWithAvailability = allSlots.Select(slot => new
             {
                 time = slot,
                 available = !bookedSlots.Contains(slot)
             }).ToList();
-=======
-            var availableSlots = allSlots.Except(bookedSlots).ToList();
->>>>>>> new-feature-branch
 
             return Ok(slotsWithAvailability);
         }

@@ -52,6 +52,21 @@ CREATE TABLE Appointments (
     CONSTRAINT FK_Appointments_Doctors FOREIGN KEY (DoctorID) REFERENCES Doctors(DocID) ON DELETE NO ACTION
 );
 
+-- Creating Prescriptions table
+CREATE TABLE Prescriptions (
+    PrescriptionID INT PRIMARY KEY IDENTITY(1,1),
+    AppointmentID INT NOT NULL,
+    Diagnosis NVARCHAR(MAX),
+    MedicinesJson NVARCHAR(MAX),  -- Stored as JSON string for structured medicines
+    ChiefComplaints NVARCHAR(MAX),  -- History/Chief Complaints
+    PastHistory NVARCHAR(MAX),
+    Examination NVARCHAR(MAX),
+    Advice NVARCHAR(MAX),
+    CreatedAt DATETIME NOT NULL DEFAULT GETDATE(),
+    UpdatedAt DATETIME NOT NULL DEFAULT GETDATE(),
+    CONSTRAINT FK_Prescriptions_Appointments FOREIGN KEY (AppointmentID) REFERENCES Appointments(AppointmentID) ON DELETE CASCADE
+);
+
 ALTER TABLE Patients
     ALTER COLUMN Symptoms NVARCHAR(12);
 EXEC sp_rename 'Patients.Symptoms', 'Aadhaar_no', 'COLUMN';

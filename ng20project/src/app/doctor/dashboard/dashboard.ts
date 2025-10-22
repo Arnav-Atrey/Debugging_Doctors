@@ -22,7 +22,6 @@ export class DoctorDashboardComponent implements OnInit {
   successMessage: string = '';
   isLoading: boolean = false;
   rejectionReason: string = '';
-<<<<<<< HEAD
   customRejectionReason: string = '';
   showCustomReason: boolean = false;
   selectedAppointmentId: number | null = null
@@ -38,9 +37,6 @@ export class DoctorDashboardComponent implements OnInit {
   ];
   
   // For completion modal
-=======
-  selectedAppointmentId: number | null = null;
->>>>>>> new-feature-branch
   completionData: AppointmentCompletionDto = {
     diagnosis: '',
     medicines: '',
