@@ -22,6 +22,21 @@
         <li class="nav-item" *ngIf="isLoggedIn && userRole === 'Doctor'">
           <a class="nav-link" routerLink="/doctor/dashboard">Dashboard</a>
         </li>
+        
+        <!-- Admin Menu -->
+        <li class="nav-item dropdown" *ngIf="isLoggedIn && userRole === 'Admin'">
+          <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
+            Admin Panel
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" routerLink="/admin/dashboard">Dashboard</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" routerLink="/admin/pending-approvals">Pending Approvals</a></li>
+            <li><a class="dropdown-item" routerLink="/admin/doctors">Manage Doctors</a></li>
+            <li><a class="dropdown-item" routerLink="/admin/patients">Manage Patients</a></li>
+            <li><a class="dropdown-item" routerLink="/admin/appointments">View Appointments</a></li>
+          </ul>
+        </li>
       </ul>
       <ul class="navbar-nav">
         <li class="nav-item" *ngIf="!isLoggedIn">

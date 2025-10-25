@@ -30,6 +30,9 @@
           <div *ngIf="registrationForm.get('email')?.errors?.['swasthatechDomain']">
             Patients cannot use @swasthatech.com domain. This domain is reserved for internal use.
           </div>
+          <div *ngIf="registrationForm.get('email')?.errors?.['adminDomainRequired']">
+            Admin registration requires @swasthatech.com email domain.
+          </div>
         </div>
         <div *ngIf="registrationForm.get('email')?.errors?.['doctorDomain'] && registrationForm.get('email')?.touched" class="invalid-feedback">
           Doctor email must end with @swasthatech.com.
@@ -45,9 +48,6 @@
           class="form-control"
           [class.is-invalid]="registrationForm.get('pswdHash')?.invalid && registrationForm.get('pswdHash')?.touched"
         >
-        <!-- <div *ngIf="registrationForm.get('pswdHash')?.invalid && registrationForm.get('pswdHash')?.touched" class="invalid-feedback">
-          Password is required.
-        </div> -->
         <div *ngIf="getPasswordError()" class="error">
           {{ getPasswordError() }}
         </div>
@@ -77,12 +77,69 @@
           [class.is-invalid]="registrationForm.get('role')?.invalid && registrationForm.get('role')?.touched"
         >
           <option value="" disabled>Select a role</option>
-          <!-- <option value="Admin">Admin</option> -->
+          <option value="Admin">Admin</option>
           <option value="Doctor">Doctor</option>
           <option value="Patient">Patient</option>
         </select>
         <div *ngIf="registrationForm.get('role')?.invalid && registrationForm.get('role')?.touched" class="invalid-feedback">
           Role is required.
+        </div>
+      </div>
+
+      <!-- Admin-specific fields -->
+      <div *ngIf="showAdminFields">
+        <div class="alert alert-info">
+          <i class="bi bi-info-circle me-2"></i>
+          Admin accounts require approval from an existing admin before access is granted.
+        </div>
+        
+        <div class="mb-3">
+          <label for="fullName" class="form-label">Full Name *</label>
+          <input
+            type="text"
+            id="fullName"
+            formControlName="fullName"
+            class="form-control"
+            [class.is-invalid]="registrationForm.get('fullName')?.invalid && registrationForm.get('fullName')?.touched"
+          />
+          <div *ngIf="registrationForm.get('fullName')?.invalid && registrationForm.get('fullName')?.touched" class="invalid-feedback">
+            Full name is required for admin registration.
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="department" class="form-label">Department *</label>
+          <select
+            id="department"
+            formControlName="department"
+            class="form-select"
+            [class.is-invalid]="registrationForm.get('department')?.invalid && registrationForm.get('department')?.touched"
+          >
+            <option value="">Select Department</option>
+            <option value="Administration">Administration</option>
+            <option value="IT">IT</option>
+            <option value="Operations">Operations</option>
+            <option value="Finance">Finance</option>
+            <option value="Human Resources">Human Resources</option>
+          </select>
+          <div *ngIf="registrationForm.get('department')?.invalid && registrationForm.get('department')?.touched" class="invalid-feedback">
+            Department is required for admin registration.
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="contactNo" class="form-label">Contact Number</label>
+          <input
+            type="tel"
+            id="contactNo"
+            formControlName="contactNo"
+            class="form-control"
+            placeholder="10-digit number"
+            [class.is-invalid]="registrationForm.get('contactNo')?.invalid && registrationForm.get('contactNo')?.touched"
+          />
+          <div *ngIf="registrationForm.get('contactNo')?.invalid && registrationForm.get('contactNo')?.touched" class="invalid-feedback">
+            Please enter a valid 10-digit contact number.
+          </div>
         </div>
       </div>
 

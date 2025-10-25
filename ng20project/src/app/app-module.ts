@@ -18,6 +18,12 @@ import { DoctorDashboardComponent } from './doctor/dashboard/dashboard';
 import { NavbarComponent } from './shared/navbar/navbar';
 import { PatientProfileComponent } from './patient/profile/profile';
 import { DoctorProfileComponent } from './doctor/profile/profile';
+import { AdminDashboardComponent } from './admin/dashboard/dashboard';
+import { PendingApprovalsComponent } from './admin/pending-approvals/pending-approvals';
+import { DoctorsManagementComponent } from './admin/doctors-management/doctors-management';
+import { PatientsManagementComponent } from './admin/patients-management/patients-management';
+import { AppointmentsManagementComponent } from './admin/appointments-management/appointments-management';
+import { AdminProfileComponent } from './admin/profile/profile';
 
 @NgModule({
   declarations: [
@@ -40,7 +46,13 @@ import { DoctorProfileComponent } from './doctor/profile/profile';
     DoctorDashboardComponent,
     NavbarComponent,
     PatientProfileComponent,
-    DoctorProfileComponent
+    DoctorProfileComponent,
+    AdminDashboardComponent,
+    PendingApprovalsComponent,
+    DoctorsManagementComponent,
+    PatientsManagementComponent,
+    AppointmentsManagementComponent,
+    AdminProfileComponent
   ],
   providers: [
     provideBrowserGlobalErrorListeners(),

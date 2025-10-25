@@ -135,11 +135,77 @@ namespace Hospital_Management_system.Controllers
                     _context.Doctors.Add(doctor);
                     await _context.SaveChangesAsync();
                 }
+                else if (userDto.Role == "Admin")
+                {
+                    // Admin registration requires additional info
+                    // This will be handled by a separate endpoint
+                    await transaction.RollbackAsync();
+                    return BadRequest(new { message = "Admin registration requires additional information. Please use the admin registration form." });
+                }
 
                 await transaction.CommitAsync();
 
                 // Preserve original return behavior
                 return CreatedAtAction("GetUser", new { id = user.UserId }, user);
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, new { message = "Registration failed", error = ex.Message });
+            }
+        }
+
+        // POST: api/Users/register-admin
+        [HttpPost("register-admin")]
+        public async Task<ActionResult> RegisterAdmin([FromBody] AdminRegistrationDto adminDto)
+        {
+            // Check if email already exists
+            if (await _context.Users.AnyAsync(u => u.Email == adminDto.Email))
+            {
+                return BadRequest(new { message = "This email is already registered." });
+            }
+
+            // Validate email domain for admin
+            if (!adminDto.Email.ToLower().EndsWith("@swasthatech.com"))
+            {
+                return BadRequest(new { message = "Admin registration requires @swasthatech.com email domain." });
+            }
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                // Create User
+                var user = new User
+                {
+                    Email = adminDto.Email,
+                    PswdHash = ComputeSHA256Hash(adminDto.PswdHash),
+                    Role = "Admin",
+                    CreatedAt = DateTime.Now
+                };
+
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+
+                // Create Admin record (not approved by default)
+                var admin = new Admin
+                {
+                    UserId = user.UserId,
+                    FullName = adminDto.FullName,
+                    Department = adminDto.Department,
+                    ContactNo = adminDto.ContactNo,
+                    IsApproved = false
+                };
+                _context.Admins.Add(admin);
+                await _context.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+
+                return Ok(new
+                {
+                    message = "Admin registration successful. Your account is pending approval from an existing admin.",
+                    userId = user.UserId
+                });
             }
             catch (Exception ex)
             {
@@ -205,6 +271,22 @@ namespace Hospital_Management_system.Controllers
                 else
                 {
                     return BadRequest(new { message = "Doctor profile not found. Please contact support." });
+                }
+            }
+            else if (user.Role == "Admin")
+            {
+                var admin = await _context.Admins
+                    .FirstOrDefaultAsync(a => a.UserId == user.UserId);
+
+                if (admin != null)
+                {
+                    if (!admin.IsApproved)
+                    {
+                        return Unauthorized(new { message = "Your admin account is pending approval. Please wait for an existing admin to approve your access." });
+                    }
+
+                    response.AdminId = admin.AdminId;
+                    response.FullName = admin.FullName;
                 }
             }
 

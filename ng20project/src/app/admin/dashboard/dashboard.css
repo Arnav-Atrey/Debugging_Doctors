@@ -1,0 +1,11 @@
+.card {
+  transition: transform 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.display-4 {
+  font-weight: bold;
+}

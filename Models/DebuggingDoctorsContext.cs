@@ -25,6 +25,8 @@ public partial class DebuggingDoctorsContext : DbContext
 
     public DbSet<Prescription> Prescriptions { get; set; }  // New DbSet
 
+    public virtual DbSet<Admin> Admins { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlServer("Name=ConnectionStrings:mycon");
 
@@ -116,6 +118,22 @@ public partial class DebuggingDoctorsContext : DbContext
             .WithOne(a => a.Prescription)  // 1:1 (change to WithMany() for 1:M)
             .HasForeignKey<Prescription>(p => p.AppointmentID)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // Configure Admin self-referencing relationship
+        modelBuilder.Entity<Admin>(entity =>
+        {
+            entity.HasKey(e => e.AdminId);
+
+            entity.HasOne(d => d.User)
+                .WithMany()
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.ApprovedByAdmin)
+                .WithMany(p => p.ApprovedAdmins)
+                .HasForeignKey(d => d.ApprovedBy)
+                .OnDelete(DeleteBehavior.NoAction); // Prevent cascade delete issues
+        });
 
         base.OnModelCreating(modelBuilder);
     

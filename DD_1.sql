@@ -75,6 +75,32 @@ ALTER TABLE Doctors
     ALTER COLUMN Dept NVARCHAR(14);
 EXEC sp_rename 'Doctors.Dept', 'HPID', 'COLUMN';
 
+-- Create Admins table
+CREATE TABLE Admins (
+    AdminID INT PRIMARY KEY IDENTITY(1,1),
+    UserID INT NOT NULL,
+    FullName NVARCHAR(100) NOT NULL,
+    Department NVARCHAR(100),
+    ContactNo NVARCHAR(20),
+    IsApproved BIT NOT NULL DEFAULT 0,
+    ApprovedBy INT NULL,
+    ApprovedAt DATETIME NULL,
+    CONSTRAINT FK_Admins_Users FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE,
+    CONSTRAINT FK_Admins_ApprovedBy FOREIGN KEY (ApprovedBy) REFERENCES Admins(AdminID)
+);
+
+--password is Admin@12345
+INSERT INTO Users (Email, PswdHash, Role, CreatedAt)
+VALUES ('swasthratechadmin@swasthatech.com', '6f2cb9dd8f4b65e24e1c3f3fa5bc57982349237f11abceacd45bbcb74d621c25', 'Admin', GETDATE());
+
+DECLARE @AdminUserId INT = SCOPE_IDENTITY();
+INSERT INTO Admins (UserID, FullName, Department, ContactNo, IsApproved, ApprovedAt)
+VALUES (@AdminUserId, 'Admin Prime', 'Administration', '9365728476', 1, GETDATE());
+update admins set FullName='Admin Prime' where AdminID=1;
+select * from users
+select * from admins
+
+
 ------------------------------------------------------------------------------------------------------
 CREATE PROCEDURE GetPatientDataForApprovedAppointment
     @AppointmentId INT,

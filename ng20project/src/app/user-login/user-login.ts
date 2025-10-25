@@ -80,11 +80,15 @@ export class UserLogin {
     error: (error) => {
       console.error('Login error:', error);
       
-      // Handle different error types
       if (error.status === 404) {
         this.errorMessage = error.error?.message || 'This email is not registered. Please register first.';
       } else if (error.status === 401) {
-        this.errorMessage = error.error?.message || 'Invalid password. Please try again.';
+        // Check if it's admin approval pending
+        if (error.error?.message?.includes('pending approval')) {
+          this.errorMessage = '⏳ ' + error.error.message;
+        } else {
+          this.errorMessage = error.error?.message || 'Invalid password. Please try again.';
+        }
       } else {
         this.errorMessage = error.error?.message || 'Login failed. Please try again.';
       }

@@ -19,6 +19,7 @@ namespace Hospital_Management_system.Models.DTOs
         public string Role { get; set; }
         public int? PatientId { get; set; }
         public int? DoctorId { get; set; }
+        public int? AdminId { get; set; }
         public string? FullName { get; set; }
     }
 }

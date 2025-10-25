@@ -10,6 +10,14 @@ import { MyAppointmentsComponent } from './patient/my-appointments/my-appointmen
 import { DoctorDashboardComponent } from './doctor/dashboard/dashboard';
 import { PatientProfileComponent } from './patient/profile/profile';
 import { DoctorProfileComponent } from './doctor/profile/profile';
+// Admin Routes
+import { AdminDashboardComponent } from './admin/dashboard/dashboard';
+import { PendingApprovalsComponent } from './admin/pending-approvals/pending-approvals';
+import { DoctorsManagementComponent } from './admin/doctors-management/doctors-management';
+import { PatientsManagementComponent } from './admin/patients-management/patients-management';
+import { AppointmentsManagementComponent } from './admin/appointments-management/appointments-management';
+import { AdminProfileComponent } from './admin/profile/profile';
+import { AuthGuard } from './guards/auth-guard';
 
 const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -19,14 +27,22 @@ const routes: Routes = [
   {path: 'doctor-details', component: DoctorDetails},
   {path: 'patient-details', component: PatientDetails},
   // Patient Routes
-  { path: 'patient/doctors', component: DoctorListComponent },
-  { path: 'patient/book-appointment/:doctorId', component: BookAppointmentComponent },
-  { path: 'patient/my-appointments', component: MyAppointmentsComponent },
-  { path: 'patient/profile', component: PatientProfileComponent },
+  { path: 'patient/doctors', component: DoctorListComponent,canActivate: [AuthGuard],data: { role: 'Patient' } },
+  { path: 'patient/book-appointment/:doctorId', component: BookAppointmentComponent,canActivate: [AuthGuard],data: { role: 'Patient' } },
+  { path: 'patient/my-appointments', component: MyAppointmentsComponent,canActivate: [AuthGuard],data: { role: 'Patient' } },
+  { path: 'patient/profile', component: PatientProfileComponent,canActivate: [AuthGuard],data: { role: 'Patient' } },
   
   // Doctor Routes
-  { path: 'doctor/dashboard', component: DoctorDashboardComponent },
-  { path: 'doctor/profile', component: DoctorProfileComponent },
+  { path: 'doctor/dashboard', component: DoctorDashboardComponent,canActivate: [AuthGuard],data: { role: 'Doctor' }  },
+  { path: 'doctor/profile', component: DoctorProfileComponent,canActivate: [AuthGuard],data: { role: 'Doctor' }  },
+
+  // Admin Routes
+  { path: 'admin/dashboard', component: AdminDashboardComponent,canActivate: [AuthGuard],data: { role: 'Admin' } },
+  { path: 'admin/pending-approvals', component: PendingApprovalsComponent,canActivate: [AuthGuard],data: { role: 'Admin' } },
+  { path: 'admin/doctors', component: DoctorsManagementComponent,canActivate: [AuthGuard],data: { role: 'Admin' } },
+  { path: 'admin/patients', component: PatientsManagementComponent,canActivate: [AuthGuard],data: { role: 'Admin' } },
+  { path: 'admin/appointments', component: AppointmentsManagementComponent,canActivate: [AuthGuard],data: { role: 'Admin' } },
+  { path: 'admin/profile', component: AdminProfileComponent,canActivate: [AuthGuard],data: { role: 'Admin' } },
 ];
 
 @NgModule({
