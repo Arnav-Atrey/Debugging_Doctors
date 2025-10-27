@@ -24,6 +24,20 @@ export interface PatientUpdateDto {
   aadhaarNo?: string;
 }
 
+export interface PatientListDto {
+  patientId: number;
+  userId: number;
+  fullName: string;
+  email: string;
+  dob?: string;
+  age: number;
+  gender?: string;
+  contactNo?: string;
+  address?: string;
+  aadhaarNo?: string;
+  createdAt: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -48,5 +62,9 @@ export class PatientService {
 checkAadhaarExists(aadhaarNo: string, excludePatientId?: number): Observable<{exists: boolean}> {
   const params = excludePatientId ? `?excludePatientId=${excludePatientId}` : '';
   return this.http.get<{exists: boolean}>(`${this.apiUrl}/check-aadhaar/${aadhaarNo}${params}`);
+}
+
+getAllPatients(): Observable<PatientListDto[]> {
+  return this.http.get<PatientListDto[]>(`${this.apiUrl}/list`);
 }
 }

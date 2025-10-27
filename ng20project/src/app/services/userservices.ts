@@ -26,6 +26,13 @@ export interface UserDto {
   email: string;
   role: string;
   createdAt: string;
+
+  // Optional fields from the login response
+  fullName?: string;
+  token?: string;
+  patientId?: number;
+  doctorId?: number;
+  adminId?: number;
 }
 
 export interface LoginResponseDto {

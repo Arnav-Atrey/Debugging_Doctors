@@ -1,14 +1,15 @@
 using Hospital_Management_system.Models;
 using Hospital_Management_system.Models.DTOs;
+using Hospital_Management_system.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using System.Security.Cryptography;
 
 namespace Hospital_Management_system.Controllers
 {
@@ -17,10 +18,11 @@ namespace Hospital_Management_system.Controllers
     public class UsersController : ControllerBase
     {
         private readonly DebuggingDoctorsContext _context;
-
-        public UsersController(DebuggingDoctorsContext context)
+        private readonly IJwtService _jwtService;
+        public UsersController(DebuggingDoctorsContext context, IJwtService jwtService)
         {
             _context = context;
+            _jwtService = jwtService;
         }
 
         // GET: api/Users
@@ -218,7 +220,6 @@ namespace Hospital_Management_system.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<LoginResponseDto>> Login(UserLoginDto loginDto)
         {
-            // Find user by email
             var user = await _context.Users
                 .FirstOrDefaultAsync(u => u.Email == loginDto.Email);
 
@@ -227,22 +228,21 @@ namespace Hospital_Management_system.Controllers
                 return NotFound(new { message = "This email is not registered. Please check your email or register for a new account." });
             }
 
-            // Compute hash of provided password and compare with stored hash
             string hashedInputPassword = ComputeSHA256Hash(loginDto.PswdHash);
             if (hashedInputPassword != user.PswdHash)
             {
                 return Unauthorized(new { message = "Invalid password. Please try again." });
             }
 
-            // Create response
             var response = new LoginResponseDto
             {
                 UserId = user.UserId,
                 Email = user.Email,
-                Role = user.Role
+                Role = user.Role,
             };
 
-            // Get Patient or Doctor information
+            int? roleSpecificId = null;
+
             if (user.Role == "Patient")
             {
                 var patient = await _context.Patients
@@ -252,10 +252,7 @@ namespace Hospital_Management_system.Controllers
                 {
                     response.PatientId = patient.PatientId;
                     response.FullName = patient.FullName;
-                }
-                else
-                {
-                    return BadRequest(new { message = "Patient profile not found. Please contact support." });
+                    roleSpecificId = patient.PatientId;
                 }
             }
             else if (user.Role == "Doctor")
@@ -267,10 +264,7 @@ namespace Hospital_Management_system.Controllers
                 {
                     response.DoctorId = doctor.DocId;
                     response.FullName = doctor.FullName;
-                }
-                else
-                {
-                    return BadRequest(new { message = "Doctor profile not found. Please contact support." });
+                    roleSpecificId = doctor.DocId;
                 }
             }
             else if (user.Role == "Admin")
@@ -287,8 +281,14 @@ namespace Hospital_Management_system.Controllers
 
                     response.AdminId = admin.AdminId;
                     response.FullName = admin.FullName;
+                    roleSpecificId = admin.AdminId;
                 }
             }
+
+            // Generate JWT Token
+            var token = _jwtService.GenerateToken(user.UserId, user.Email, user.Role, roleSpecificId);
+            response.Token = token;
+            response.ExpiresAt = DateTime.UtcNow.AddMinutes(60); // Match with JWT expiry
 
             return Ok(response);
         }

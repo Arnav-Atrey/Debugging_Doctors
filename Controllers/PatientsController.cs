@@ -109,6 +109,45 @@ namespace Hospital_Management_system.Controllers
             return Ok(new { message = "Profile updated successfully" });
         }
 
+        // GET: api/Patients/list
+        [HttpGet("list")]
+        public async Task<ActionResult<IEnumerable<PatientListDto>>> GetPatientsList()
+        {
+            var patients = await _context.Patients
+                .Include(p => p.User)
+                .ToListAsync();
+
+            var patientDtos = patients.Select(p => new PatientListDto
+            {
+                PatientId = p.PatientId,
+                UserId = p.UserId,
+                FullName = p.FullName,
+                Email = p.User.Email,
+                Dob = p.Dob,
+                Age = CalculateAge(p.Dob),
+                Gender = p.Gender,
+                ContactNo = p.ContactNo,
+                Address = p.Address,
+                Aadhaar_no = p.Aadhaar_no,
+                CreatedAt = p.User.CreatedAt
+            }).ToList();
+
+            return patientDtos;
+        }
+
+        // Helper method to calculate age
+        private int CalculateAge(DateOnly? dob)
+        {
+            if (!dob.HasValue) return 0;
+
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            var age = today.Year - dob.Value.Year;
+            if (dob.Value > today.AddYears(-age))
+                age--;
+
+            return age;
+        }
+
         // GET: api/Patients/check-contact/{contactNo}
         [HttpGet("check-contact/{contactNo}")]
         public async Task<ActionResult<bool>> CheckContactExists(string contactNo, [FromQuery] int? excludePatientId)
@@ -161,15 +200,15 @@ namespace Hospital_Management_system.Controllers
         }
 
         // Utility function to calculate age from DOB
-        private int CalculateAge(DateOnly? dob)
-        {
-            if (!dob.HasValue) return 0;
+        //private int CalculateAge(DateOnly? dob)
+        //{
+        //    if (!dob.HasValue) return 0;
 
-            var today = DateOnly.FromDateTime(DateTime.Today);
-            var age = today.Year - dob.Value.Year;
-            if (dob.Value > today.AddYears(-age)) age--;
-            return age;
-        }
+        //    var today = DateOnly.FromDateTime(DateTime.Today);
+        //    var age = today.Year - dob.Value.Year;
+        //    if (dob.Value > today.AddYears(-age)) age--;
+        //    return age;
+        //}
 
     }
 }

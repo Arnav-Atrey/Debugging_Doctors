@@ -21,5 +21,8 @@ namespace Hospital_Management_system.Models.DTOs
         public int? DoctorId { get; set; }
         public int? AdminId { get; set; }
         public string? FullName { get; set; }
+
+        public string Token { get; set; } = null!;  // Add JWT token
+        public DateTime ExpiresAt { get; set; }      // Token expiry
     }
 }

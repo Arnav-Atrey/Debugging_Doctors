@@ -4,8 +4,7 @@ import { AppRoutingModule } from './app-routing-module';
 import { App } from './app';
 import { UserLogin } from './user-login/user-login';
 import { UserRegisteration } from './user-registeration/user-registeration';
-import { HttpClient, provideHttpClient } from '@angular/common/http';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClientModule, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CaptchaComponent } from './captcha/captcha';
@@ -24,6 +23,7 @@ import { DoctorsManagementComponent } from './admin/doctors-management/doctors-m
 import { PatientsManagementComponent } from './admin/patients-management/patients-management';
 import { AppointmentsManagementComponent } from './admin/appointments-management/appointments-management';
 import { AdminProfileComponent } from './admin/profile/profile';
+import { authInterceptor } from './interceptors/auth-interceptor'; // Import the interceptor
 
 @NgModule({
   declarations: [
@@ -56,7 +56,7 @@ import { AdminProfileComponent } from './admin/profile/profile';
   ],
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideHttpClient()
+    provideHttpClient(withInterceptors([authInterceptor])) // Add interceptor to HTTP client
   ],
   bootstrap: [App]
 })

@@ -3,18 +3,19 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { PatientListDto, PatientService } from '../../services/patientservices';
 
-export interface PatientListDto {
-  patientId: number;
-  userId: number;
-  fullName: string;
-  email: string;
-  dob?: string;
-  gender?: string;
-  contactNo?: string;
-  address?: string;
-  aadhaarNo?: string;
-}
+// export interface PatientListDto {
+//   patientId: number;
+//   userId: number;
+//   fullName: string;
+//   email: string;
+//   dob?: string;
+//   gender?: string;
+//   contactNo?: string;
+//   address?: string;
+//   aadhaarNo?: string;
+// }
 
 @Component({
   selector: 'app-patients-management',
@@ -78,6 +79,11 @@ export class PatientsManagementComponent implements OnInit {
              patient.aadhaarNo?.includes(this.searchTerm) ||
              patient.contactNo?.includes(this.searchTerm);
     });
+  }
+
+  formatDate(date?: string): string {
+    if (!date) return 'N/A';
+    return new Date(date).toLocaleDateString();
   }
 
   calculateAge(dob?: string): number {

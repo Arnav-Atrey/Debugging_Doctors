@@ -1,18 +1,20 @@
-﻿using System;
+﻿using Hospital_Management_system.Models;
+using Hospital_Management_system.Models.DTOs;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Hospital_Management_system.Models;
-using Hospital_Management_system.Models.DTOs;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
 
 namespace Hospital_Management_system.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class AppointmentsController : ControllerBase
     {
         private readonly DebuggingDoctorsContext _context;
@@ -227,6 +229,7 @@ namespace Hospital_Management_system.Controllers
 
         // POST: api/Appointments/book
         [HttpPost("book")]
+        [Authorize(Roles = "Patient")]
         public async Task<ActionResult<AppointmentResponseDto>> BookAppointment([FromBody] AppointmentBookingDto bookingDto)
         {
             // Check if doctor exists

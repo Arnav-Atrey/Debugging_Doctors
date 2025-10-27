@@ -1,5 +1,6 @@
 ﻿using Hospital_Management_system.Models;
 using Hospital_Management_system.Models.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -11,6 +12,7 @@ namespace Hospital_Management_system.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class DoctorsController : ControllerBase
     {
         private readonly DebuggingDoctorsContext _context;
@@ -22,6 +24,7 @@ namespace Hospital_Management_system.Controllers
 
         // GET: api/Doctors
         [HttpGet]
+        [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<Doctor>>> GetDoctors()
         {
             return await _context.Doctors.ToListAsync();
@@ -54,8 +57,12 @@ namespace Hospital_Management_system.Controllers
 
         // PUT: api/Doctors/5
         [HttpPut("{id}")]
+        [Authorize(Roles = "Doctor,Admin")]
         public async Task<IActionResult> PutDoctor(int id, [FromBody] DoctorUpdateDto doctorDto)
         {
+            // Get current user's ID from JWT claims
+            var userIdClaim = User.FindFirst("UserId")?.Value;
+
             if (id != doctorDto.DocId)
             {
                 return BadRequest(new { message = "Doctor ID mismatch" });

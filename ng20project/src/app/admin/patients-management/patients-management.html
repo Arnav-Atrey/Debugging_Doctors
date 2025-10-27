@@ -17,7 +17,7 @@
       <input
         type="text"
         class="form-control"
-        placeholder="Search by name, email, aadhaar, or contact..."
+        placeholder="Search by name or contact..."
         [(ngModel)]="searchTerm"
         (input)="filterPatients()"
       >
@@ -39,26 +39,22 @@
           <thead>
             <tr>
               <th>Name</th>
-              <th>Email</th>
               <th>Age</th>
               <th>Gender</th>
               <th>Contact</th>
-              <th>Aadhaar</th>
               <th>Address</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let patient of filteredPatients">
               <td>{{ patient.fullName }}</td>
-              <td>{{ patient.email }}</td>
-              <td>{{ patient.dob}}</td>
+              <td>{{ patient.age || 'N/A' }}</td>
               <td>{{ patient.gender || 'N/A' }}</td>
               <td>{{ patient.contactNo || 'N/A' }}</td>
-              <td>{{ patient.aadhaarNo || 'N/A' }}</td>
               <td>{{ patient.address || 'N/A' }}</td>
             </tr>
             <tr *ngIf="filteredPatients.length === 0">
-              <td colspan="8" class="text-center">No patients found</td>
+              <td colspan="9" class="text-center">No patients found</td>
             </tr>
           </tbody>
         </table>
