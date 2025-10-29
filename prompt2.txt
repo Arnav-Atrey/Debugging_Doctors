@@ -53,3 +53,6 @@ If a user wants to register as an admin, he should fill his user details and adm
 Also while registering there should be admin dropdown for admin registeration.
 
 I want to create an AI chatbot for this using groq. How do i proceed with this?
+
+actually i made it work without your code thanks! i just had to remove/comment the lines _context.Doctors.Add(doctor); and _context.Patients.Add(patient);
+i want to 

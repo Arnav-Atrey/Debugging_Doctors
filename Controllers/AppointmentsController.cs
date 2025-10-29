@@ -1,17 +1,20 @@
-﻿using System;
+﻿using Hospital_Management_system.Models;
+using Hospital_Management_system.Models.DTOs;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Hospital_Management_system.Models;
-using Hospital_Management_system.Models.DTOs;
 
 namespace Hospital_Management_system.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class AppointmentsController : ControllerBase
     {
         private readonly DebuggingDoctorsContext _context;
@@ -19,6 +22,34 @@ namespace Hospital_Management_system.Controllers
         public AppointmentsController(DebuggingDoctorsContext context)
         {
             _context = context;
+        }
+
+        [HttpGet("patient-data")]
+        public async Task<ActionResult<PatientDetailsDto>> GetPatientDataForApprovedAppointment(
+    int appointmentId,
+    int doctorId,  // Changed from userId
+    string userRole)
+        {
+            try
+            {
+                var result = await _context.Database
+                    .SqlQueryRaw<PatientDetailsDto>(
+                        "EXEC GetPatientDataForApprovedAppointment @AppointmentId, @DoctorId, @UserRole",
+                        new SqlParameter("@AppointmentId", appointmentId),
+                        new SqlParameter("@DoctorId", doctorId),  // Changed parameter name
+                        new SqlParameter("@UserRole", userRole)
+                    )
+                    .ToListAsync();
+
+                if (result == null || !result.Any())
+                    return NotFound(new { message = "No data found or access denied." });
+
+                return Ok(result.First());
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         // GET: api/Appointments
@@ -113,6 +144,29 @@ namespace Hospital_Management_system.Controllers
             return appointments;
         }
 
+        [HttpGet("{id}/prescription")]
+        public async Task<ActionResult<PrescriptionDto>> GetPrescription(int id)
+        {
+            var prescription = await _context.Prescriptions
+                .FirstOrDefaultAsync(p => p.AppointmentID == id);
+
+            if (prescription == null)
+                return NotFound("Prescription not found for this appointment.");
+
+            return Ok(new PrescriptionDto
+            {
+                AppointmentId = prescription.AppointmentID,
+                Diagnosis = prescription.Diagnosis,
+                Medicines = string.IsNullOrEmpty(prescription.MedicinesJson)
+                    ? new List<MedicineDto>()
+                    : JsonSerializer.Deserialize<List<MedicineDto>>(prescription.MedicinesJson),
+                ChiefComplaints = prescription.ChiefComplaints,
+                PastHistory = prescription.PastHistory,
+                Examination = prescription.Examination,
+                Advice = prescription.Advice
+            });
+        }
+
         // GET: api/Appointments/doctor/{doctorId}/pending
         [HttpGet("doctor/{doctorId}/pending")]
         public async Task<ActionResult<IEnumerable<AppointmentResponseDto>>> GetDoctorPendingAppointments(int doctorId)
@@ -175,6 +229,7 @@ namespace Hospital_Management_system.Controllers
 
         // POST: api/Appointments/book
         [HttpPost("book")]
+        [Authorize(Roles = "Patient")]
         public async Task<ActionResult<AppointmentResponseDto>> BookAppointment([FromBody] AppointmentBookingDto bookingDto)
         {
             // Check if doctor exists
@@ -208,7 +263,7 @@ namespace Hospital_Management_system.Controllers
                 DoctorId = bookingDto.DoctorId,
                 AppointmentDate = bookingDto.AppointmentDate,
                 Symptoms = bookingDto.Symptoms,
-                AppointmentStatus = "Pending", // Initial status
+                AppointmentStatus = "Pending",
                 InvoiceStatus = "Pending"
             };
 
@@ -284,7 +339,6 @@ namespace Hospital_Management_system.Controllers
             }
 
             appointment.AppointmentStatus = "Rejected";
-            // Store reason in Diagnosis field temporarily (or just ignore it if you don't want to store it)
             appointment.Diagnosis = $"Rejected: {actionDto.Reason}";
 
             try
@@ -483,6 +537,7 @@ namespace Hospital_Management_system.Controllers
         }
 
         // GET: api/Appointments/doctor/{doctorId}/available-slots?date=2025-10-10
+        // GET: api/Appointments/doctor/{doctorId}/available-slots?date=2025-10-10
         [HttpGet("doctor/{doctorId}/available-slots")]
         public async Task<ActionResult<object>> GetAvailableSlots(int doctorId, [FromQuery] string date)
         {
@@ -547,7 +602,7 @@ namespace Hospital_Management_system.Controllers
             return NoContent();
         }
 
-        // POST: api/Appointments (Keep for backward compatibility)
+        // POST: api/Appointments
         [HttpPost]
         public async Task<ActionResult<Appointment>> PostAppointment(Appointment appointment)
         {
@@ -557,9 +612,57 @@ namespace Hospital_Management_system.Controllers
             return CreatedAtAction("GetAppointment", new { id = appointment.AppointmentId }, appointment);
         }
 
-        // DELETE: api/Appointments/5
+        [HttpPost("save-prescription")]
+        public async Task<IActionResult> SavePrescription([FromBody] PrescriptionDto dto)
+        {
+            if (dto == null || dto.AppointmentId <= 0)
+                return BadRequest("Invalid prescription data.");
+
+            var appointment = await _context.Appointments.FindAsync(dto.AppointmentId);
+            if (appointment == null)
+                return NotFound("Appointment not found.");
+
+            if (appointment.AppointmentStatus != "Confirmed")
+                return BadRequest("Only confirmed appointments can be completed with a prescription.");
+
+            var existingPrescription = await _context.Prescriptions
+                .FirstOrDefaultAsync(p => p.AppointmentID == dto.AppointmentId);
+
+            if (existingPrescription != null)
+            {
+                existingPrescription.Diagnosis = dto.Diagnosis ?? existingPrescription.Diagnosis;
+                existingPrescription.MedicinesJson = JsonSerializer.Serialize(dto.Medicines ?? JsonSerializer.Deserialize<List<MedicineDto>>(existingPrescription.MedicinesJson));
+                existingPrescription.ChiefComplaints = dto.ChiefComplaints ?? existingPrescription.ChiefComplaints;
+                existingPrescription.PastHistory = dto.PastHistory ?? existingPrescription.PastHistory;
+                existingPrescription.Examination = dto.Examination ?? existingPrescription.Examination;
+                existingPrescription.Advice = dto.Advice ?? existingPrescription.Advice;
+                existingPrescription.UpdatedAt = DateTime.UtcNow;
+            }
+            else
+            {
+                var prescription = new Prescription
+                {
+                    AppointmentID = dto.AppointmentId,
+                    Diagnosis = dto.Diagnosis ?? string.Empty,
+                    MedicinesJson = JsonSerializer.Serialize(dto.Medicines ?? new List<MedicineDto>()),
+                    ChiefComplaints = dto.ChiefComplaints ?? string.Empty,
+                    PastHistory = dto.PastHistory ?? string.Empty,
+                    Examination = dto.Examination ?? string.Empty,
+                    Advice = dto.Advice ?? string.Empty
+                };
+                _context.Prescriptions.Add(prescription);
+            }
+
+            appointment.AppointmentStatus = "Completed";
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Prescription saved and appointment completed successfully" });
+        }
+
+        // DELETE: api/Appointments/5 (Soft Delete)
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteAppointment(int id)
+        [Authorize(Roles = "Admin,Doctor,Patient")]
+        public async Task<IActionResult> DeleteAppointment(int id, [FromBody] SoftDeleteDto deleteDto)
         {
             var appointment = await _context.Appointments.FindAsync(id);
             if (appointment == null)
@@ -567,10 +670,79 @@ namespace Hospital_Management_system.Controllers
                 return NotFound();
             }
 
-            _context.Appointments.Remove(appointment);
+            // Check authorization - patients can only delete their own appointments
+            var userRole = User.FindFirst("Role")?.Value;
+            if (userRole == "Patient")
+            {
+                var patientIdClaim = User.FindFirst("PatientId")?.Value;
+                if (patientIdClaim == null || int.Parse(patientIdClaim) != appointment.PatientId)
+                {
+                    return Forbid();
+                }
+            }
+
+            appointment.IsDeleted = true;
+            appointment.DeletedAt = DateTime.UtcNow;
+            appointment.DeletedBy = deleteDto.DeletedBy;
+            appointment.AppointmentStatus = "Cancelled";
+
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new { message = "Appointment soft deleted successfully" });
+        }
+
+        // GET: api/Appointments/deleted (Admin only)
+        [HttpGet("deleted")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<IEnumerable<AppointmentResponseDto>>> GetDeletedAppointments()
+        {
+            var deletedAppointments = await _context.Appointments
+                .IgnoreQueryFilters()
+                .Include(a => a.Patient)
+                .Include(a => a.Doctor)
+                .Where(a => a.IsDeleted)
+                .Select(a => new AppointmentResponseDto
+                {
+                    AppointmentId = a.AppointmentId,
+                    PatientId = a.PatientId,
+                    PatientName = a.Patient.FullName,
+                    DoctorId = a.DoctorId,
+                    DoctorName = a.Doctor.FullName,
+                    Specialisation = a.Doctor.Specialisation,
+                    AppointmentDate = a.AppointmentDate,
+                    AppointmentStatus = a.AppointmentStatus,
+                    Symptoms = a.Symptoms,
+                    Diagnosis = a.Diagnosis,
+                    Medicines = a.Medicines,
+                    InvoiceStatus = a.InvoiceStatus,
+                    InvoiceAmount = a.InvoiceAmount
+                })
+                .ToListAsync();
+
+            return deletedAppointments;
+        }
+
+        // PUT: api/Appointments/5/restore (Admin only)
+        [HttpPut("{id}/restore")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> RestoreAppointment(int id)
+        {
+            var appointment = await _context.Appointments
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(a => a.AppointmentId == id && a.IsDeleted);
+
+            if (appointment == null)
+            {
+                return NotFound(new { message = "Deleted appointment not found" });
+            }
+
+            appointment.IsDeleted = false;
+            appointment.DeletedAt = null;
+            appointment.DeletedBy = null;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Appointment restored successfully" });
         }
 
         private bool AppointmentExists(int id)

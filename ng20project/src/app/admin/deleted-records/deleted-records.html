@@ -1,0 +1,106 @@
+<div class="container mt-4">
+  <h2 class="mb-4">Deleted Records Management</h2>
+
+  <div *ngIf="successMessage" class="alert alert-success alert-dismissible fade show">
+    {{ successMessage }}
+    <button type="button" class="btn-close" (click)="successMessage = ''" aria-label="Close"></button>
+  </div>
+
+  <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show">
+    {{ errorMessage }}
+    <button type="button" class="btn-close" (click)="errorMessage = ''" aria-label="Close"></button>
+  </div>
+
+  <!-- Tabs -->
+  <ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+      <a 
+        class="nav-link" 
+        [class.active]="activeTab === 'doctors'"
+        (click)="switchTab('doctors')"
+        style="cursor: pointer;"
+      >
+        Deleted Doctors
+        <span class="badge bg-danger ms-2">{{ deletedDoctors.length }}</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a 
+        class="nav-link" 
+        [class.active]="activeTab === 'patients'"
+        (click)="switchTab('patients')"
+        style="cursor: pointer;"
+      >
+        Deleted Patients
+        <span class="badge bg-danger ms-2">{{ deletedPatients.length }}</span>
+      </a>
+    </li>
+  </ul>
+
+  <div *ngIf="isLoading" class="text-center">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
+  <!-- Deleted Doctors Tab -->
+  <div *ngIf="activeTab === 'doctors' && !isLoading">
+    <div *ngIf="deletedDoctors.length === 0" class="alert alert-info">
+      No deleted doctors found.
+    </div>
+
+    <div class="row" *ngIf="deletedDoctors.length > 0">
+      <div class="col-md-6 mb-3" *ngFor="let doctor of deletedDoctors">
+        <div class="card border-danger">
+          <div class="card-body">
+            <h5 class="card-title">{{ doctor.fullName }}</h5>
+            <p class="card-text">
+              <strong>Specialization:</strong> {{ doctor.specialisation || 'N/A' }}<br>
+              <strong>HPID:</strong> {{ doctor.hpid || 'N/A' }}<br>
+              <strong>Contact:</strong> {{ doctor.contactNo || 'N/A' }}<br>
+              <strong class="text-danger">Deleted At:</strong> {{ formatDate(doctor.deletedAt) }}
+            </p>
+            <div class="d-flex gap-2">
+              <button class="btn btn-success btn-sm" (click)="restoreDoctor(doctor.docId)">
+                <i class="bi bi-arrow-counterclockwise me-1"></i>Restore
+              </button>
+              <button class="btn btn-danger btn-sm" (click)="permanentDeleteDoctor(doctor.docId)">
+<i class="bi bi-trash-fill me-1"></i>Permanent Delete
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+  </div>
+  <!-- Deleted Patients Tab -->
+  <div *ngIf="activeTab === 'patients' && !isLoading">
+    <div *ngIf="deletedPatients.length === 0" class="alert alert-info">
+      No deleted patients found.
+    </div>
+    <div class="row" *ngIf="deletedPatients.length > 0">
+  <div class="col-md-6 mb-3" *ngFor="let patient of deletedPatients">
+    <div class="card border-danger">
+      <div class="card-body">
+        <h5 class="card-title">{{ patient.fullName }}</h5>
+        <p class="card-text">
+          <strong>Email:</strong> {{ patient.email }}<br>
+          <strong>Age:</strong> {{ patient.age }}<br>
+          <strong>Gender:</strong> {{ patient.gender || 'N/A' }}<br>
+          <strong>Contact:</strong> {{ patient.contactNo || 'N/A' }}<br>
+          <strong class="text-danger">Deleted At:</strong> {{ formatDate(patient.deletedAt) }}
+        </p>
+        <div class="d-flex gap-2">
+          <button class="btn btn-success btn-sm" (click)="restorePatient(patient.patientId)">
+            <i class="bi bi-arrow-counterclockwise me-1"></i>Restore
+          </button>
+          <button class="btn btn-danger btn-sm" (click)="permanentDeletePatient(patient.patientId)">
+            <i class="bi bi-trash-fill me-1"></i>Permanent Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+  </div>
+</div>

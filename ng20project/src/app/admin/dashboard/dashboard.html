@@ -1,0 +1,85 @@
+<div class="container mt-4">
+  <h2 class="mb-4">Admin Dashboard</h2>
+
+  <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show">
+    {{ errorMessage }}
+    <button type="button" class="btn-close" (click)="errorMessage = ''" aria-label="Close"></button>
+  </div>
+
+  <div *ngIf="isLoading" class="text-center">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="row" *ngIf="!isLoading && stats">
+    <div class="col-md-4 mb-4">
+      <div class="card text-white bg-primary">
+        <div class="card-body">
+          <h5 class="card-title">Total Doctors</h5>
+          <h2 class="display-4">{{ stats.totalDoctors }}</h2>
+          <a routerLink="/admin/doctors" class="btn btn-light btn-sm mt-2">View All</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+      <div class="card text-white bg-success">
+        <div class="card-body">
+          <h5 class="card-title">Total Patients</h5>
+          <h2 class="display-4">{{ stats.totalPatients }}</h2>
+          <a routerLink="/admin/patients" class="btn btn-light btn-sm mt-2">View All</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+      <div class="card text-white bg-info">
+        <div class="card-body">
+          <h5 class="card-title">Total Appointments</h5>
+          <h2 class="display-4">{{ stats.totalAppointments }}</h2>
+          <a routerLink="/admin/appointments" class="btn btn-light btn-sm mt-2">View All</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+      <div class="card text-white bg-warning">
+        <div class="card-body">
+          <h5 class="card-title">Pending Appointments</h5>
+          <h2 class="display-4">{{ stats.pendingAppointments }}</h2>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+      <div class="card text-white bg-secondary">
+        <div class="card-body">
+          <h5 class="card-title">Completed Appointments</h5>
+          <h2 class="display-4">{{ stats.completedAppointments }}</h2>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+      <div class="card text-white bg-dark">
+        <div class="card-body">
+          <h5 class="card-title">Deleted Records</h5>
+          <h2 class="display-4">{{ deletedRecordsCount || 0 }}</h2>
+          <a routerLink="/admin/deleted-records" class="btn btn-light btn-sm mt-2">View Deleted</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+      <div class="card text-white bg-danger">
+        <div class="card-body">
+          <h5 class="card-title">Pending Admin Approvals</h5>
+          <h2 class="display-4">{{ stats.pendingAdmins }}</h2>
+          <a routerLink="/admin/pending-approvals" class="btn btn-light btn-sm mt-2">Review</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

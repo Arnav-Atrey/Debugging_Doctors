@@ -1,14 +1,15 @@
-﻿using Hospital_Management_system.Models;
+using Hospital_Management_system.Models;
 using Hospital_Management_system.Models.DTOs;
+using Hospital_Management_system.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using System.Security.Cryptography;
 
 namespace Hospital_Management_system.Controllers
 {
@@ -17,10 +18,11 @@ namespace Hospital_Management_system.Controllers
     public class UsersController : ControllerBase
     {
         private readonly DebuggingDoctorsContext _context;
-
-        public UsersController(DebuggingDoctorsContext context)
+        private readonly IJwtService _jwtService;
+        public UsersController(DebuggingDoctorsContext context, IJwtService jwtService)
         {
             _context = context;
+            _jwtService = jwtService;
         }
 
         // GET: api/Users
@@ -72,143 +74,6 @@ namespace Hospital_Management_system.Controllers
             }
 
             return NoContent();
-        }
-
-        // POST: api/Users
-        [HttpPost]
-        public async Task<ActionResult<User>> PostUser(UserRegistrationDto userDto)
-        {
-            // Check if email already exists
-            if (await _context.Users.AnyAsync(u => u.Email == userDto.Email))
-            {
-                return BadRequest(new { message = "This email is already registered. Please use a different email or try logging in." });
-            }
-
-            // Validate role
-            if (userDto.Role != "Doctor" && userDto.Role != "Patient" && userDto.Role != "Admin")
-            {
-                return BadRequest(new { message = "Invalid role" });
-            }
-
-            // Prevent patients from using @swasthatech.com domain
-            if (userDto.Role == "Patient" && userDto.Email.ToLower().EndsWith("@swasthatech.com"))
-            {
-                return BadRequest(new { message = "@swasthatech.com domain is reserved for internal use only." });
-            }
-
-            using var transaction = await _context.Database.BeginTransactionAsync();
-
-            try
-            {
-                // Map DTO to User entity
-                var user = new User
-                {
-                    Email = userDto.Email,
-                    PswdHash = ComputeSHA256Hash(userDto.PswdHash),
-                    Role = userDto.Role,
-                    CreatedAt = DateTime.UtcNow, // Set creation date (preserving original)
-                    Doctors = new List<Doctor>(), // Initialize empty collections (preserving original)
-                    Patients = new List<Patient>()
-                };
-
-                _context.Users.Add(user);
-                await _context.SaveChangesAsync();
-
-                // Create corresponding Patient or Doctor record
-                if (userDto.Role == "Patient")
-                {
-                    var patient = new Patient
-                    {
-                        UserId = user.UserId,
-                        FullName = userDto.Email.Split('@')[0], // Temporary name from email
-                    };
-                    _context.Patients.Add(patient);
-                    await _context.SaveChangesAsync();
-                }
-                else if (userDto.Role == "Doctor")
-                {
-                    var doctor = new Doctor
-                    {
-                        UserId = user.UserId,
-                        FullName = userDto.Email.Split('@')[0], // Temporary name from email
-                    };
-                    _context.Doctors.Add(doctor);
-                    await _context.SaveChangesAsync();
-                }
-
-                await transaction.CommitAsync();
-
-                // Preserve original return behavior
-                return CreatedAtAction("GetUser", new { id = user.UserId }, user);
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                return StatusCode(500, new { message = "Registration failed", error = ex.Message });
-            }
-        }
-
-        // POST: api/Users/login
-        [HttpPost("login")]
-        public async Task<ActionResult<LoginResponseDto>> Login(UserLoginDto loginDto)
-        {
-            // Find user by email
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Email == loginDto.Email);
-
-            if (user == null)
-            {
-                return NotFound(new { message = "This email is not registered. Please check your email or register for a new account." });
-            }
-
-            // Compute hash of provided password and compare with stored hash
-            string hashedInputPassword = ComputeSHA256Hash(loginDto.PswdHash);
-            if (hashedInputPassword != user.PswdHash)
-            {
-                return Unauthorized(new { message = "Invalid password. Please try again." });
-            }
-
-            // Create response
-            var response = new LoginResponseDto
-            {
-                UserId = user.UserId,
-                Email = user.Email,
-                Role = user.Role
-            };
-
-            // Get Patient or Doctor information
-            if (user.Role == "Patient")
-            {
-                var patient = await _context.Patients
-                    .FirstOrDefaultAsync(p => p.UserId == user.UserId);
-
-                if (patient != null)
-                {
-                    response.PatientId = patient.PatientId;
-                    response.FullName = patient.FullName;
-                }
-                else
-                {
-                    return BadRequest(new { message = "Patient profile not found. Please contact support." });
-                }
-            }
-            else if (user.Role == "Doctor")
-            {
-                var doctor = await _context.Doctors
-                    .FirstOrDefaultAsync(d => d.UserId == user.UserId);
-
-                if (doctor != null)
-                {
-                    response.DoctorId = doctor.DocId;
-                    response.FullName = doctor.FullName;
-                }
-                else
-                {
-                    return BadRequest(new { message = "Doctor profile not found. Please contact support." });
-                }
-            }
-
-            return Ok(response);
         }
 
         //// POST: api/Users (Registration)
@@ -281,6 +146,221 @@ namespace Hospital_Management_system.Controllers
         //        return StatusCode(500, new { message = "Registration failed", error = ex.Message });
         //    }
         //}
+
+        // POST: api/Users
+        [HttpPost]
+        public async Task<ActionResult<User>> PostUser(UserRegistrationDto userDto)
+        {
+            // Check if email already exists
+            if (await _context.Users.AnyAsync(u => u.Email == userDto.Email))
+            {
+                return BadRequest(new { message = "This email is already registered. Please use a different email or try logging in." });
+            }
+
+            // Validate role
+            if (userDto.Role != "Doctor" && userDto.Role != "Patient" && userDto.Role != "Admin")
+            {
+                return BadRequest(new { message = "Invalid role" });
+            }
+
+            // Prevent patients from using @swasthatech.com domain
+            if (userDto.Role == "Patient" && userDto.Email.ToLower().EndsWith("@swasthatech.com"))
+            {
+                return BadRequest(new { message = "@swasthatech.com domain is reserved for internal use only." });
+            }
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                // Map DTO to User entity
+                var user = new User
+                {
+                    Email = userDto.Email,
+                    PswdHash = ComputeSHA256Hash(userDto.PswdHash),
+                    Role = userDto.Role,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+
+                // Create corresponding Patient or Doctor record
+                if (userDto.Role == "Patient")
+                {
+                    var patient = new Patient
+                    {
+                        UserId = user.UserId,
+                        FullName = userDto.Email.Split('@')[0], // Temporary name from email
+                    };
+                    //_context.Patients.Add(patient);
+                    await _context.SaveChangesAsync();
+                }
+                else if (userDto.Role == "Doctor")
+                {
+                    var doctor = new Doctor
+                    {
+                        UserId = user.UserId,
+                        FullName = userDto.Email.Split('@')[0], // Temporary name from email
+                    };
+                    //_context.Doctors.Add(doctor);
+                    await _context.SaveChangesAsync();
+                }
+                else if (userDto.Role == "Admin")
+                {
+                    // Admin registration requires additional info
+                    // This will be handled by a separate endpoint
+                    await transaction.RollbackAsync();
+                    return BadRequest(new { message = "Admin registration requires additional information. Please use the admin registration form." });
+                }
+
+                await transaction.CommitAsync();
+
+                // Preserve original return behavior
+                return CreatedAtAction("GetUser", new { id = user.UserId }, user);
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, new { message = "Registration failed", error = ex.Message });
+            }
+        }
+
+        // POST: api/Users/register-admin
+        [HttpPost("register-admin")]
+        public async Task<ActionResult> RegisterAdmin([FromBody] AdminRegistrationDto adminDto)
+        {
+            // Check if email already exists
+            if (await _context.Users.AnyAsync(u => u.Email == adminDto.Email))
+            {
+                return BadRequest(new { message = "This email is already registered." });
+            }
+
+            // Validate email domain for admin
+            if (!adminDto.Email.ToLower().EndsWith("@swasthatech.com"))
+            {
+                return BadRequest(new { message = "Admin registration requires @swasthatech.com email domain." });
+            }
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                // Create User
+                var user = new User
+                {
+                    Email = adminDto.Email,
+                    PswdHash = ComputeSHA256Hash(adminDto.PswdHash),
+                    Role = "Admin",
+                    CreatedAt = DateTime.Now
+                };
+
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+
+                // Create Admin record (not approved by default)
+                var admin = new Admin
+                {
+                    UserId = user.UserId,
+                    FullName = adminDto.FullName,
+                    Department = adminDto.Department,
+                    ContactNo = adminDto.ContactNo,
+                    IsApproved = false
+                };
+                _context.Admins.Add(admin);
+                await _context.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+
+                return Ok(new
+                {
+                    message = "Admin registration successful. Your account is pending approval from an existing admin.",
+                    userId = user.UserId
+                });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, new { message = "Registration failed", error = ex.Message });
+            }
+        }
+
+        // POST: api/Users/login
+        [HttpPost("login")]
+        public async Task<ActionResult<LoginResponseDto>> Login(UserLoginDto loginDto)
+        {
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == loginDto.Email);
+
+            if (user == null)
+            {
+                return NotFound(new { message = "This email is not registered. Please check your email or register for a new account." });
+            }
+
+            string hashedInputPassword = ComputeSHA256Hash(loginDto.PswdHash);
+            if (hashedInputPassword != user.PswdHash)
+            {
+                return Unauthorized(new { message = "Invalid password. Please try again." });
+            }
+
+            var response = new LoginResponseDto
+            {
+                UserId = user.UserId,
+                Email = user.Email,
+                Role = user.Role,
+            };
+
+            int? roleSpecificId = null;
+
+            if (user.Role == "Patient")
+            {
+                var patient = await _context.Patients
+                    .FirstOrDefaultAsync(p => p.UserId == user.UserId);
+
+                if (patient != null)
+                {
+                    response.PatientId = patient.PatientId;
+                    response.FullName = patient.FullName;
+                    roleSpecificId = patient.PatientId;
+                }
+            }
+            else if (user.Role == "Doctor")
+            {
+                var doctor = await _context.Doctors
+                    .FirstOrDefaultAsync(d => d.UserId == user.UserId);
+
+                if (doctor != null)
+                {
+                    response.DoctorId = doctor.DocId;
+                    response.FullName = doctor.FullName;
+                    roleSpecificId = doctor.DocId;
+                }
+            }
+            else if (user.Role == "Admin")
+            {
+                var admin = await _context.Admins
+                    .FirstOrDefaultAsync(a => a.UserId == user.UserId);
+
+                if (admin != null)
+                {
+                    if (!admin.IsApproved)
+                    {
+                        return Unauthorized(new { message = "Your admin account is pending approval. Please wait for an existing admin to approve your access." });
+                    }
+
+                    response.AdminId = admin.AdminId;
+                    response.FullName = admin.FullName;
+                    roleSpecificId = admin.AdminId;
+                }
+            }
+
+            // Generate JWT Token
+            var token = _jwtService.GenerateToken(user.UserId, user.Email, user.Role, roleSpecificId);
+            response.Token = token;
+            response.ExpiresAt = DateTime.UtcNow.AddMinutes(60); // Match with JWT expiry
+
+            return Ok(response);
+        }
 
 
         private static string ComputeSHA256Hash(string rawData)

@@ -1,13 +1,13 @@
-﻿//updated controller of patients 
+﻿using Hospital_Management_system.Models;
+using Hospital_Management_system.Models.DTOs;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Hospital_Management_system.Models;
-using Hospital_Management_system.Models.DTOs;
 
 namespace Hospital_Management_system.Controllers
 {
@@ -36,40 +36,15 @@ namespace Hospital_Management_system.Controllers
                 ContactNo = patient.ContactNo,
                 Address = patient.Address,
                 Aadhaar_no = patient.Aadhaar_no,
-                //Age = CalculateAge(patient.DOB)
+                Age = CalculateAge(patient.Dob)
             }).ToList();
 
             return patientDtos;
         }
 
-        //// GET: api/Patients/5
-        //[HttpGet("{id}")]
-        //public async Task<ActionResult<PatientDto>> GetPatient(int id)
-        //{
-        //    var patient = await _context.Patients.FindAsync(id);
-
-        //    if (patient == null)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    // Map to PatientDto and calculate age
-        //    var patientDto = new PatientDto
-        //    {
-        //        FullName = patient.FullName,
-        //        Gender = patient.Gender,
-        //        ContactNo = patient.ContactNo,
-        //        Address = patient.Address,
-        //        Aadhaar_no = patient.Aadhaar_no,
-        //        //Age = CalculateAge(patient.DOB)
-        //    };
-
-        //    return patientDto;
-        //}
-
         // GET: api/Patients/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Patient>> GetPatient(int id)
+        public async Task<ActionResult<PatientDto>> GetPatient(int id)
         {
             var patient = await _context.Patients.FindAsync(id);
 
@@ -78,11 +53,20 @@ namespace Hospital_Management_system.Controllers
                 return NotFound();
             }
 
-            return patient;
+            // Map to PatientDto and calculate age
+            var patientDto = new PatientDto
+            {
+                FullName = patient.FullName,
+                Gender = patient.Gender,
+                ContactNo = patient.ContactNo,
+                Address = patient.Address,
+                Aadhaar_no = patient.Aadhaar_no,
+                Age = CalculateAge(patient.Dob)
+            };
+
+            return patientDto;
         }
 
-        // PUT: api/Patients/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         // PUT: api/Patients/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutPatient(int id, [FromBody] PatientUpdateDto patientDto)
@@ -126,6 +110,45 @@ namespace Hospital_Management_system.Controllers
             return Ok(new { message = "Profile updated successfully" });
         }
 
+        // GET: api/Patients/list
+        [HttpGet("list")]
+        public async Task<ActionResult<IEnumerable<PatientListDto>>> GetPatientsList()
+        {
+            var patients = await _context.Patients
+                .Include(p => p.User)
+                .ToListAsync();
+
+            var patientDtos = patients.Select(p => new PatientListDto
+            {
+                PatientId = p.PatientId,
+                UserId = p.UserId,
+                FullName = p.FullName,
+                Email = p.User.Email,
+                Dob = p.Dob,
+                Age = CalculateAge(p.Dob),
+                Gender = p.Gender,
+                ContactNo = p.ContactNo,
+                Address = p.Address,
+                Aadhaar_no = p.Aadhaar_no,
+                CreatedAt = p.User.CreatedAt
+            }).ToList();
+
+            return patientDtos;
+        }
+
+        // Helper method to calculate age
+        private int CalculateAge(DateOnly? dob)
+        {
+            if (!dob.HasValue) return 0;
+
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            var age = today.Year - dob.Value.Year;
+            if (dob.Value > today.AddYears(-age))
+                age--;
+
+            return age;
+        }
+
         // GET: api/Patients/check-contact/{contactNo}
         [HttpGet("check-contact/{contactNo}")]
         public async Task<ActionResult<bool>> CheckContactExists(string contactNo, [FromQuery] int? excludePatientId)
@@ -136,7 +159,7 @@ namespace Hospital_Management_system.Controllers
             return Ok(new { exists });
         }
 
-        // GET: api/Patients/check-aadhaar/{aadhaarNo}
+        // GET: api/Patients/check-aadhaar/{aadhaarNo}]
         [HttpGet("check-aadhaar/{aadhaarNo}")]
         public async Task<ActionResult<bool>> CheckAadhaarExists(string aadhaarNo, [FromQuery] int? excludePatientId)
         {
@@ -147,7 +170,6 @@ namespace Hospital_Management_system.Controllers
         }
 
         // POST: api/Patients
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<Patient>> PostPatient(Patient patient)
         {
@@ -157,11 +179,86 @@ namespace Hospital_Management_system.Controllers
             return CreatedAtAction("GetPatient", new { id = patient.PatientId }, patient);
         }
 
-        // DELETE: api/Patients/5
+        // GET: api/Patients/deleted (Admin only)
+        [HttpGet("deleted")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<IEnumerable<PatientListDto>>> GetDeletedPatients()
+        {
+            var deletedPatients = await _context.Patients
+                .IgnoreQueryFilters()
+                .Include(p => p.User)
+                .Where(p => p.IsDeleted)
+                .Select(p => new PatientListDto
+                {
+                    PatientId = p.PatientId,
+                    UserId = p.UserId,
+                    FullName = p.FullName,
+                    Email = p.User.Email,
+                    Dob = p.Dob,
+                    Age = CalculateAge(p.Dob),
+                    Gender = p.Gender,
+                    ContactNo = p.ContactNo,
+                    Address = p.Address,
+                    Aadhaar_no = p.Aadhaar_no,
+                    CreatedAt = p.User.CreatedAt
+                })
+                .ToListAsync();
+
+            return deletedPatients;
+        }
+
+        // DELETE: api/Patients/5 (Soft Delete)
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeletePatient(int id)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeletePatient(int id, [FromBody] SoftDeleteDto deleteDto)
         {
             var patient = await _context.Patients.FindAsync(id);
+            if (patient == null)
+            {
+                return NotFound();
+            }
+
+            patient.IsDeleted = true;
+            patient.DeletedAt = DateTime.UtcNow;
+            patient.DeletedBy = deleteDto.DeletedBy;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Patient soft deleted successfully" });
+        }
+
+        // PUT: api/Patients/5/restore (Admin only)
+        [HttpPut("{id}/restore")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> RestorePatient(int id)
+        {
+            var patient = await _context.Patients
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(p => p.PatientId == id && p.IsDeleted);
+
+            if (patient == null)
+            {
+                return NotFound(new { message = "Deleted patient not found" });
+            }
+
+            patient.IsDeleted = false;
+            patient.DeletedAt = null;
+            patient.DeletedBy = null;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Patient restored successfully" });
+        }
+
+        // DELETE: api/Patients/5/permanent (Hard Delete)
+        [HttpDelete("{id}/permanent")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> PermanentDeletePatient(int id)
+        {
+            var patient = await _context.Patients
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(p => p.PatientId == id);
+
             if (patient == null)
             {
                 return NotFound();
@@ -170,7 +267,7 @@ namespace Hospital_Management_system.Controllers
             _context.Patients.Remove(patient);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new { message = "Patient permanently deleted" });
         }
 
         private bool PatientExists(int id)
@@ -179,14 +276,15 @@ namespace Hospital_Management_system.Controllers
         }
 
         // Utility function to calculate age from DOB
-        private int CalculateAge(DateTime? dob)
-        {
-            if (!dob.HasValue) return 0;
+        //private int CalculateAge(DateOnly? dob)
+        //{
+        //    if (!dob.HasValue) return 0;
 
-            var today = DateTime.Today;
-            var age = today.Year - dob.Value.Year;
-            if (dob.Value.Date > today.AddYears(-age)) age--; // Adjust if birthday hasn't occurred yet
-            return age;
-        }
+        //    var today = DateOnly.FromDateTime(DateTime.Today);
+        //    var age = today.Year - dob.Value.Year;
+        //    if (dob.Value > today.AddYears(-age)) age--;
+        //    return age;
+        //}
+
     }
 }

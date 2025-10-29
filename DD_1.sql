@@ -52,6 +52,21 @@ CREATE TABLE Appointments (
     CONSTRAINT FK_Appointments_Doctors FOREIGN KEY (DoctorID) REFERENCES Doctors(DocID) ON DELETE NO ACTION
 );
 
+-- Creating Prescriptions table
+CREATE TABLE Prescriptions (
+    PrescriptionID INT PRIMARY KEY IDENTITY(1,1),
+    AppointmentID INT NOT NULL,
+    Diagnosis NVARCHAR(MAX),
+    MedicinesJson NVARCHAR(MAX),  -- Stored as JSON string for structured medicines
+    ChiefComplaints NVARCHAR(MAX),  -- History/Chief Complaints
+    PastHistory NVARCHAR(MAX),
+    Examination NVARCHAR(MAX),
+    Advice NVARCHAR(MAX),
+    CreatedAt DATETIME NOT NULL DEFAULT GETDATE(),
+    UpdatedAt DATETIME NOT NULL DEFAULT GETDATE(),
+    CONSTRAINT FK_Prescriptions_Appointments FOREIGN KEY (AppointmentID) REFERENCES Appointments(AppointmentID) ON DELETE CASCADE
+);
+
 ALTER TABLE Patients
     ALTER COLUMN Symptoms NVARCHAR(12);
 EXEC sp_rename 'Patients.Symptoms', 'Aadhaar_no', 'COLUMN';
@@ -59,6 +74,74 @@ EXEC sp_rename 'Patients.Symptoms', 'Aadhaar_no', 'COLUMN';
 ALTER TABLE Doctors
     ALTER COLUMN Dept NVARCHAR(14);
 EXEC sp_rename 'Doctors.Dept', 'HPID', 'COLUMN';
+
+-- Create Admins table
+CREATE TABLE Admins (
+    AdminID INT PRIMARY KEY IDENTITY(1,1),
+    UserID INT NOT NULL,
+    FullName NVARCHAR(100) NOT NULL,
+    Department NVARCHAR(100),
+    ContactNo NVARCHAR(20),
+    IsApproved BIT NOT NULL DEFAULT 0,
+    ApprovedBy INT NULL,
+    ApprovedAt DATETIME NULL,
+    CONSTRAINT FK_Admins_Users FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE,
+    CONSTRAINT FK_Admins_ApprovedBy FOREIGN KEY (ApprovedBy) REFERENCES Admins(AdminID)
+);
+select * from users
+select * from doctors
+select * from patients
+
+--password is Admin@12345
+INSERT INTO Users (Email, PswdHash, Role, CreatedAt)
+VALUES ('swasthratechadmin@swasthatech.com', '6f2cb9dd8f4b65e24e1c3f3fa5bc57982349237f11abceacd45bbcb74d621c25', 'Admin', GETDATE());
+
+DECLARE @AdminUserId INT = SCOPE_IDENTITY();
+INSERT INTO Admins (UserID, FullName, Department, ContactNo, IsApproved, ApprovedAt)
+VALUES (@AdminUserId, 'Admin Prime', 'Administration', '9365728476', 1, GETDATE());
+update admins set FullName='Admin Prime' where AdminID=1;
+select * from users
+select * from doctors
+select * from patients
+select * from admins
+select * from appointments
+
+-- Add soft delete columns to Users table
+ALTER TABLE Users
+ADD IsDeleted BIT NOT NULL DEFAULT 0,
+    DeletedAt DATETIME NULL,
+    DeletedBy INT NULL;
+
+-- Add soft delete columns to Doctors table
+ALTER TABLE Doctors
+ADD IsDeleted BIT NOT NULL DEFAULT 0,
+    DeletedAt DATETIME NULL,
+    DeletedBy INT NULL;
+
+-- Add soft delete columns to Patients table
+ALTER TABLE Patients
+ADD IsDeleted BIT NOT NULL DEFAULT 0,
+    DeletedAt DATETIME NULL,
+    DeletedBy INT NULL;
+
+-- Add soft delete columns to Appointments table
+ALTER TABLE Appointments
+ADD IsDeleted BIT NOT NULL DEFAULT 0,
+    DeletedAt DATETIME NULL,
+    DeletedBy INT NULL;
+
+-- Add soft delete columns to Admins table
+ALTER TABLE Admins
+ADD IsDeleted BIT NOT NULL DEFAULT 0,
+    DeletedAt DATETIME NULL,
+    DeletedBy INT NULL;
+
+-- Create indexes for better query performance
+CREATE INDEX IX_Users_IsDeleted ON Users(IsDeleted);
+CREATE INDEX IX_Doctors_IsDeleted ON Doctors(IsDeleted);
+CREATE INDEX IX_Patients_IsDeleted ON Patients(IsDeleted);
+CREATE INDEX IX_Appointments_IsDeleted ON Appointments(IsDeleted);
+CREATE INDEX IX_Admins_IsDeleted ON Admins(IsDeleted);
 
 ------------------------------------------------------------------------------------------------------
 CREATE PROCEDURE GetPatientDataForApprovedAppointment

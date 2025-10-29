@@ -4,8 +4,7 @@ import { AppRoutingModule } from './app-routing-module';
 import { App } from './app';
 import { UserLogin } from './user-login/user-login';
 import { UserRegisteration } from './user-registeration/user-registeration';
-import { HttpClient, provideHttpClient } from '@angular/common/http';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClientModule, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CaptchaComponent } from './captcha/captcha';
@@ -18,6 +17,14 @@ import { DoctorDashboardComponent } from './doctor/dashboard/dashboard';
 import { NavbarComponent } from './shared/navbar/navbar';
 import { PatientProfileComponent } from './patient/profile/profile';
 import { DoctorProfileComponent } from './doctor/profile/profile';
+import { AdminDashboardComponent } from './admin/dashboard/dashboard';
+import { PendingApprovalsComponent } from './admin/pending-approvals/pending-approvals';
+import { DoctorsManagementComponent } from './admin/doctors-management/doctors-management';
+import { PatientsManagementComponent } from './admin/patients-management/patients-management';
+import { AppointmentsManagementComponent } from './admin/appointments-management/appointments-management';
+import { AdminProfileComponent } from './admin/profile/profile';
+import { authInterceptor } from './interceptors/auth-interceptor';
+import { DeletedRecordsComponent } from './admin/deleted-records/deleted-records'; // Import the interceptor
 
 @NgModule({
   declarations: [
@@ -40,11 +47,18 @@ import { DoctorProfileComponent } from './doctor/profile/profile';
     DoctorDashboardComponent,
     NavbarComponent,
     PatientProfileComponent,
-    DoctorProfileComponent
+    DoctorProfileComponent,
+    AdminDashboardComponent,
+    PendingApprovalsComponent,
+    DoctorsManagementComponent,
+    PatientsManagementComponent,
+    AppointmentsManagementComponent,
+    AdminProfileComponent,
+    DeletedRecordsComponent
   ],
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideHttpClient()
+    provideHttpClient(withInterceptors([authInterceptor])) // Add interceptor to HTTP client
   ],
   bootstrap: [App]
 })

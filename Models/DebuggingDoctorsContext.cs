@@ -23,11 +23,22 @@ public partial class DebuggingDoctorsContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
+    public DbSet<Prescription> Prescriptions { get; set; }  // New DbSet
+
+    public virtual DbSet<Admin> Admins { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlServer("Name=ConnectionStrings:mycon");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // Apply global query filters for soft delete
+        modelBuilder.Entity<User>().HasQueryFilter(u => !u.IsDeleted);
+        modelBuilder.Entity<Doctor>().HasQueryFilter(d => !d.IsDeleted);
+        modelBuilder.Entity<Patient>().HasQueryFilter(p => !p.IsDeleted);
+        modelBuilder.Entity<Appointment>().HasQueryFilter(a => !a.IsDeleted);
+        modelBuilder.Entity<Admin>().HasQueryFilter(a => !a.IsDeleted);
+
         modelBuilder.Entity<Appointment>(entity =>
         {
             entity.HasKey(e => e.AppointmentId).HasName("PK__Appointm__8ECDFCA231D090B1");
@@ -106,7 +117,66 @@ public partial class DebuggingDoctorsContext : DbContext
             entity.Property(e => e.Role).HasMaxLength(20);
         });
 
-        OnModelCreatingPartial(modelBuilder);
+    
+
+        // Configure Prescription relationship
+        modelBuilder.Entity<Prescription>()
+            .HasOne(p => p.Appointment)
+            .WithOne(a => a.Prescription)  // 1:1 (change to WithMany() for 1:M)
+            .HasForeignKey<Prescription>(p => p.AppointmentID)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Configure Admin self-referencing relationship
+        modelBuilder.Entity<Admin>(entity =>
+        {
+            entity.HasKey(e => e.AdminId);
+
+            entity.HasOne(d => d.User)
+                .WithMany()
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.ApprovedByAdmin)
+                .WithMany(p => p.ApprovedAdmins)
+                .HasForeignKey(d => d.ApprovedBy)
+                .OnDelete(DeleteBehavior.NoAction); // Prevent cascade delete issues
+        });
+
+        base.OnModelCreating(modelBuilder);
+    
+    }
+
+    // Override SaveChanges to implement soft delete
+    public override int SaveChanges()
+    {
+        UpdateSoftDeleteStatuses();
+        return base.SaveChanges();
+    }
+
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        UpdateSoftDeleteStatuses();
+        return base.SaveChangesAsync(cancellationToken);
+    }
+
+    private void UpdateSoftDeleteStatuses()
+    {
+        foreach (var entry in ChangeTracker.Entries())
+        {
+            if (entry.Entity is ISoftDeletable entity)
+            {
+                switch (entry.State)
+                {
+                    case EntityState.Deleted:
+                        // Change from deleted to modified
+                        entry.State = EntityState.Modified;
+                        entity.IsDeleted = true;
+                        entity.DeletedAt = DateTime.UtcNow;
+                        // DeletedBy should be set by the controller
+                        break;
+                }
+            }
+        }
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);

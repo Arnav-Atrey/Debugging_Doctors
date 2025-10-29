@@ -10,6 +10,7 @@ export interface Doctor {
   hpid: string;
   availability: string;
   contactNo: string;
+  deletedAt?: string;
 }
 
 export interface DoctorUpdateDto {
@@ -42,7 +43,24 @@ export class DoctorService {
     return this.http.get<Doctor[]>(`${this.apiUrl}/specialization/${specialization}`);
   }
 
-  updateDoctor(id: number, data: DoctorUpdateDto): Observable<any> {
-    return this.http.put(`${this.apiUrl}/${id}`, data);
+  updateDoctor(id: number, data: DoctorUpdateDto): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/${id}`, data);
+  }
+  softDeleteDoctor(doctorId: number, deletedBy: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${doctorId}`, {
+      body: { deletedBy }
+    });
+  }
+
+  getDeletedDoctors(): Observable<Doctor[]> {
+    return this.http.get<Doctor[]>(`${this.apiUrl}/deleted`);
+  }
+
+  restoreDoctor(doctorId: number, restoredBy: number): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${doctorId}/restore`, { restoredBy });
+  }
+
+  permanentDeleteDoctor(doctorId: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${doctorId}/permanent`);
   }
 }

@@ -7,6 +7,14 @@ export interface LoginDto {
   pswdHash: string;
 }
 
+export interface AdminRegistrationDto {
+  email: string;
+  pswdHash: string;
+  fullName: string;
+  department?: string;
+  contactNo?: string;
+}
+
 export interface UserRegistrationDto {
   email: string;
   pswdHash: string;
@@ -18,6 +26,13 @@ export interface UserDto {
   email: string;
   role: string;
   createdAt: string;
+
+  // Optional fields from the login response
+  fullName?: string;
+  token?: string;
+  patientId?: number;
+  doctorId?: number;
+  adminId?: number;
 }
 
 export interface LoginResponseDto {
@@ -88,6 +103,10 @@ export class UserService {
 
   addPatientDetails(userId: number, patientDetails: PatientDetailsDto): Observable<Patient> {
     return this.http.post<Patient>(`${this.apiUrl}/${userId}/patient-details`, patientDetails);
+  }
+  
+  registerAdmin(data: AdminRegistrationDto): Observable<any> {
+    return this.http.post(`${this.apiUrl}/register-admin`, data);
   }
 
 }

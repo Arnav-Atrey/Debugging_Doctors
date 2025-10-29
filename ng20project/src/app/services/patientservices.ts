@@ -24,6 +24,21 @@ export interface PatientUpdateDto {
   aadhaarNo?: string;
 }
 
+export interface PatientListDto {
+  patientId: number;
+  userId: number;
+  fullName: string;
+  email: string;
+  dob?: string;
+  age: number;
+  gender?: string;
+  contactNo?: string;
+  address?: string;
+  aadhaarNo?: string;
+  createdAt: string;
+  deletedAt?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -48,5 +63,27 @@ export class PatientService {
 checkAadhaarExists(aadhaarNo: string, excludePatientId?: number): Observable<{exists: boolean}> {
   const params = excludePatientId ? `?excludePatientId=${excludePatientId}` : '';
   return this.http.get<{exists: boolean}>(`${this.apiUrl}/check-aadhaar/${aadhaarNo}${params}`);
+}
+
+getAllPatients(): Observable<PatientListDto[]> {
+  return this.http.get<PatientListDto[]>(`${this.apiUrl}/list`);
+}
+
+softDeletePatient(patientId: number, deletedBy: number): Observable<any> {
+  return this.http.delete(`${this.apiUrl}/${patientId}`, {
+    body: { deletedBy }
+  });
+}
+
+getDeletedPatients(): Observable<PatientListDto[]> {
+  return this.http.get<PatientListDto[]>(`${this.apiUrl}/deleted`);
+}
+
+restorePatient(patientId: number, restoredBy: number): Observable<any> {
+  return this.http.put(`${this.apiUrl}/${patientId}/restore`, { restoredBy });
+}
+
+permanentDeletePatient(patientId: number): Observable<any> {
+  return this.http.delete(`${this.apiUrl}/${patientId}/permanent`);
 }
 }

@@ -8,7 +8,8 @@
         public string ContactNo { get; set; }
         public string Address { get; set; }
         public string Aadhaar_no { get; set; }
-        //public int Age { get; set; }
+        
+        public int Age { get; set; }
     }
     public class PatientUpdateDto
     {

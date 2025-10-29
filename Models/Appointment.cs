@@ -24,8 +24,15 @@ public partial class Appointment
     public string InvoiceStatus { get; set; } = null!;
 
     public decimal? InvoiceAmount { get; set; }
+    // Soft Delete properties
+    public bool IsDeleted { get; set; }
+    public DateTime? DeletedAt { get; set; }
+    public int? DeletedBy { get; set; }
 
     public virtual Doctor Doctor { get; set; } = null!;
 
     public virtual Patient Patient { get; set; } = null!;
+
+    // Existing Appointment class...
+    public virtual Prescription Prescription { get; set; }  // 1:1 relationship (optional: use ICollection<Prescription> for 1:M)s
 }
