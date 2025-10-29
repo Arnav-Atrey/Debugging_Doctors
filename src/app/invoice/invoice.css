@@ -1,0 +1,33 @@
+/* src/app/invoice/invoice.component.css */
+#invoice-print {
+  max-width: 900px;
+  margin: auto;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.table th {
+  background-color: #e3f2fd !important;
+  font-weight: 600;
+}
+
+.text-success {
+  color: #2e7d32 !important;
+}
+
+@media print {
+  .btn {
+    display: none !important;
+  }
+  body * {
+    visibility: hidden;
+  }
+  #invoice-print, #invoice-print * {
+    visibility: visible;
+  }
+  #invoice-print {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}

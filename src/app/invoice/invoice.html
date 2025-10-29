@@ -1,0 +1,89 @@
+<!-- src/app/invoice/invoice.component.html -->
+<div class="container mt-4" id="invoice-print">
+  <div class="card border-primary">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+      <h4 class="mb-0">INVOICE</h4>
+      <button class="btn btn-light btn-sm" (click)="downloadPDF()">
+        Download PDF
+      </button>
+    </div>
+
+    <div class="card-body">
+      <!-- Patient & Doctor -->
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <strong>Patient:</strong> {{ patient.name || 'N/A' }}
+        </div>
+        <div class="col-md-6">
+          <strong>Doctor:</strong> {{ doctor.name || 'N/A' }} - {{ doctor.info || 'N/A' }}
+        </div>
+      </div>
+      <div class="row mb-4">
+        <div class="col-md-6">
+          <strong>Age:</strong> {{ patient.age || 0 }}
+        </div>
+        <div class="col-md-6">
+          <strong>Date:</strong> {{ patient.date ? (patient.date | date:'mediumDate') : 'N/A' }}
+        </div>
+      </div>
+
+      <hr>
+
+      <!-- Medicines Table -->
+      <h5>Prescribed Medicines</h5>
+      <div class="table-responsive">
+        <table class="table table-sm table-bordered table-striped">
+          <thead class="table-primary">
+            <tr>
+              <th>#</th>
+              <th>Medicine</th>
+              <th>Morning</th>
+              <th>Afternoon</th>
+              <th>Night</th>
+              <th>Days</th>
+              <th>₹/Tab</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let m of medicines">
+              <td>{{ m.slNo }}</td>
+              <td>{{ m.name }}</td>
+              <td>{{ m.morningBefore }}/{{ m.morningAfter }}</td>
+              <td>{{ m.afternoonBefore }}/{{ m.afternoonAfter }}</td>
+              <td>{{ m.nightBefore }}/{{ m.nightAfter }}</td>
+              <td>{{ m.days }}</td>
+              <td>{{ bill.currency }}{{ m.pricePerTablet | number:'1.2-2' }}</td>
+              <td>{{ bill.currency }}{{ medicineTotal(m) | number:'1.2-2' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <hr>
+
+      <!-- Billing Summary -->
+      <h5>Billing Summary</h5>
+      <div class="row">
+        <div class="col-md-8">
+          <p>Consultation Fee ({{ doctor.info }}):</p>
+          <p>Medicine Cost:</p>
+          <p><strong>GST (5%):</strong></p>
+          <hr>
+          <p class="fw-bold fs-5">GRAND TOTAL:</p>
+        </div>
+        <div class="col-md-4 text-end">
+          <p>{{ bill.currency }}{{ bill.consultationFee | number:'1.2-2' }}</p>
+          <p>{{ bill.currency }}{{ bill.medicineCost | number:'1.2-2' }}</p>
+          <p><strong>{{ bill.currency }}{{ bill.gst | number:'1.2-2' }}</strong></p>
+          <hr>
+          <p class="fw-bold fs-5 text-success">{{ bill.currency }}{{ bill.total | number:'1.2-2' }}</p>
+        </div>
+      </div>
+
+      <div class="text-center text-muted mt-4 small">
+        Bellandur, Bengaluru - 560103 | +91 8888666623 | swasthatech@gmail.com
+      </div>
+    </div>
+  </div>
+</div>
