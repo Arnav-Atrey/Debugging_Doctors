@@ -24,12 +24,14 @@ import { PatientsManagementComponent } from './admin/patients-management/patient
 import { AppointmentsManagementComponent } from './admin/appointments-management/appointments-management';
 import { AdminProfileComponent } from './admin/profile/profile';
 import { authInterceptor } from './interceptors/auth-interceptor';
-import { DeletedRecordsComponent } from './admin/deleted-records/deleted-records'; // Import the interceptor
+import { DeletedRecordsComponent } from './admin/deleted-records/deleted-records';
+import { Invoice } from './invoice/invoice'; // Import the interceptor
 
 @NgModule({
   declarations: [
     App,
     PatientDetails,
+    Invoice,
   ],
   imports: [
     BrowserModule,
