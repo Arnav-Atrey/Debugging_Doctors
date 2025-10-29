@@ -1,0 +1,122 @@
+<div class="container min-vh-100 d-flex align-items-center justify-content-center">
+  <div class="card p-4 shadow" style="max-width: 500px; width: 100%;">
+    <h2 class="card-title text-center mb-4">Doctor Details</h2>
+    
+    <!-- Success Alert -->
+    <div *ngIf="successMessage" class="alert alert-success alert-dismissible fade show" role="alert">
+      {{ successMessage }}
+      <button type="button" class="btn-close" (click)="successMessage = ''" aria-label="Close"></button>
+    </div>
+    
+    <!-- Error Alert -->
+    <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
+      {{ errorMessage }}
+      <button type="button" class="btn-close" (click)="errorMessage = ''" aria-label="Close"></button>
+    </div>
+    
+    <form [formGroup]="doctorDetailsForm" (ngSubmit)="onSubmit()">
+      <!-- Full Name -->
+      <div class="mb-3">
+        <label for="fullName" class="form-label">Full Name <span class="text-danger">*</span></label>
+        <input
+          type="text"
+          id="fullName"
+          formControlName="fullName"
+          class="form-control"
+          placeholder="Enter your full name"
+          [class.is-invalid]="doctorDetailsForm.get('fullName')?.invalid && doctorDetailsForm.get('fullName')?.touched"
+        />
+        <div *ngIf="doctorDetailsForm.get('fullName')?.invalid && doctorDetailsForm.get('fullName')?.touched" class="invalid-feedback">
+          <div *ngIf="doctorDetailsForm.get('fullName')?.errors?.['required']">Full name is required.</div>
+          <div *ngIf="doctorDetailsForm.get('fullName')?.errors?.['minlength']">Full name must be at least 3 characters.</div>
+        </div>
+        <div *ngIf="doctorDetailsForm.get('fullName')?.errors?.['noNumbers'] && doctorDetailsForm.get('fullName')?.touched" class="invalid-feedback">
+          Full Name cannot contain numbers.
+        </div>
+      </div>
+      
+      <!-- Specialisation -->
+      <div class="mb-3">
+        <label for="specialisation" class="form-label">Specialisation <span class="text-danger">*</span></label>
+        <select
+          id="specialisation"
+          formControlName="specialisation"
+          class="form-select"
+          [class.is-invalid]="doctorDetailsForm.get('specialisation')?.invalid && doctorDetailsForm.get('specialisation')?.touched"
+        >
+          <option value="" disabled>Select specialisation</option>
+          <option value="Cardiology">Cardiology</option>
+          <option value="Dermatology">Dermatology</option>
+          <option value="Neurology">Neurology</option>
+          <option value="Orthopedics">Orthopedics</option>
+          <option value="Pediatrics">Pediatrics</option>
+          <option value="Psychiatry">Psychiatry</option>
+          <option value="Radiology">Radiology</option>
+          <option value="General Medicine">General Medicine</option>
+          <option value="Surgery">Surgery</option>
+          <option value="Other">Other</option>
+        </select>
+        <div *ngIf="doctorDetailsForm.get('specialisation')?.invalid && doctorDetailsForm.get('specialisation')?.touched" class="invalid-feedback">
+          Specialisation is required.
+        </div>
+      </div>
+      
+      <!-- HPID -->
+      <div class="mb-3">
+        <label for="hpid" class="form-label">Health Practitioner ID (HPID) <span class="text-danger">*</span></label>
+        <input
+          type="text"
+          id="hpid"
+          formControlName="hpid"
+          class="form-control"
+          placeholder="e.g., DOC123456"
+          [class.is-invalid]="doctorDetailsForm.get('hpid')?.invalid && doctorDetailsForm.get('hpid')?.touched"
+        />
+        <div *ngIf="doctorDetailsForm.get('hpid')?.invalid && doctorDetailsForm.get('hpid')?.touched" class="invalid-feedback">
+          <div *ngIf="doctorDetailsForm.get('hpid')?.errors?.['required']">HPID is required.</div>
+          <div *ngIf="doctorDetailsForm.get('hpid')?.errors?.['hpidFormat']">HPID must be a 14 digit number.</div>
+          <div *ngIf="doctorDetailsForm.get('hpid')?.errors?.['hpidDate']">First 8 digits must be a valid date (YYYYMMDD).</div>
+        </div>
+      </div>
+      
+      <!-- Contact Number -->
+      <div class="mb-3">
+        <label for="contactNo" class="form-label">Contact Number <span class="text-danger">*</span></label>
+        <input
+          type="tel"
+          id="contactNo"
+          formControlName="contactNo"
+          class="form-control"
+          placeholder="10-digit mobile number"
+          [class.is-invalid]="doctorDetailsForm.get('contactNo')?.invalid && doctorDetailsForm.get('contactNo')?.touched"
+        />
+        <div *ngIf="doctorDetailsForm.get('contactNo')?.invalid && doctorDetailsForm.get('contactNo')?.touched" class="invalid-feedback">
+          <div *ngIf="doctorDetailsForm.get('contactNo')?.errors?.['required']">Contact number is required.</div>
+          <div *ngIf="doctorDetailsForm.get('contactNo')?.errors?.['pattern']">Contact number must be 10 digits.</div>
+        </div>
+      </div>
+      
+      <div class="d-grid gap-2">
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="doctorDetailsForm.invalid"
+        >
+          Submit Details
+        </button>
+        
+        <!-- <button
+          type="button"
+          class="btn btn-outline-secondary"
+          (click)="skipForNow()"
+        >
+          Skip for Now
+        </button> -->
+      </div>
+    </form>
+    
+    <p class="mt-3 text-center text-muted small">
+      * All fields are required
+    </p>
+  </div>
+</div>

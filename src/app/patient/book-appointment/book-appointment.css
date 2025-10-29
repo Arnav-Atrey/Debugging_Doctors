@@ -1,0 +1,22 @@
+.form-select option.available-slot {
+  font-weight: bold;
+  color: #198754;
+  background-color: #d1e7dd;
+}
+
+.form-select option.taken-slot {
+  font-weight: 300;
+  color: #6c757d;
+  background-color: #f8f9fa;
+  font-style: italic;
+}
+
+.form-select option:disabled {
+  color: #adb5bd !important;
+}
+
+/* Optional: Style the info text */
+small.text-muted {
+  display: block;
+  margin-top: 0.25rem;
+}

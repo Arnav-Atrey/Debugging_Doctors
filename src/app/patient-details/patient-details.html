@@ -1,0 +1,166 @@
+<div class="container min-vh-100 d-flex align-items-center justify-content-center">
+  <div class="card p-4 shadow" style="max-width: 600px; width: 100%;">
+    <h2 class="card-title text-center mb-4">Patient Details</h2>
+    
+    <!-- Success Alert -->
+    <div *ngIf="successMessage" class="alert alert-success alert-dismissible fade show" role="alert">
+      {{ successMessage }}
+      <button type="button" class="btn-close" (click)="successMessage = ''" aria-label="Close"></button>
+    </div>
+    
+    <!-- Error Alert -->
+    <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
+      {{ errorMessage }}
+      <button type="button" class="btn-close" (click)="errorMessage = ''" aria-label="Close"></button>
+    </div>
+    
+    <form [formGroup]="patientDetailsForm" (ngSubmit)="onSubmit()">
+
+      <!-- Prefix -->
+      <div class="mb-3">
+        <label for="prefix" class="form-label">Prefix <span class="text-danger">*</span></label>
+        <select
+          id="prefix"
+          formControlName="prefix"
+          class="form-select"
+          [class.is-invalid]="patientDetailsForm.get('prefix')?.invalid && patientDetailsForm.get('prefix')?.touched"
+        >
+          <option value="" disabled>Select prefix</option>
+          <option value="Mr">Mr</option>
+          <option value="Mrs">Mrs</option>
+          <option value="Ms">Ms</option>
+          <option value="Master">Master</option>
+        </select>
+        <div *ngIf="patientDetailsForm.get('prefix')?.invalid && patientDetailsForm.get('prefix')?.touched" class="invalid-feedback">
+          Prefix is required.
+        </div>
+      </div>
+      <!-- Full Name -->
+      <div class="mb-3">
+        <label for="fullName" class="form-label">Full Name <span class="text-danger">*</span></label>
+        <input
+          type="text"
+          id="fullName"
+          formControlName="fullName"
+          class="form-control"
+          placeholder="Enter your full name"
+          [class.is-invalid]="patientDetailsForm.get('fullName')?.invalid && patientDetailsForm.get('fullName')?.touched"
+        />
+        <div *ngIf="patientDetailsForm.get('fullName')?.invalid && patientDetailsForm.get('fullName')?.touched" class="invalid-feedback">
+          <div *ngIf="patientDetailsForm.get('fullName')?.errors?.['required']">Full name is required.</div>
+          <div *ngIf="patientDetailsForm.get('fullName')?.errors?.['minlength']">Full name must be at least 3 characters.</div>
+        </div>
+      </div>
+      
+      <!-- Date of Birth -->
+      <div class="mb-3">
+        <label for="dob" class="form-label">Date of Birth <span class="text-danger">*</span></label>
+        <input
+          type="date"
+          id="dob"
+          formControlName="dob"
+          class="form-control"
+          [max]="maxDate"
+          [class.is-invalid]="patientDetailsForm.get('dob')?.invalid && patientDetailsForm.get('dob')?.touched"
+        />
+        <div *ngIf="patientDetailsForm.get('dob')?.invalid && patientDetailsForm.get('dob')?.touched" class="invalid-feedback">
+          Date of birth is required.
+        </div>
+      </div>
+      
+      <!-- Gender -->
+      <div class="mb-3">
+        <label for="gender" class="form-label">Gender <span class="text-danger">*</span></label>
+        <select
+          id="gender"
+          formControlName="gender"
+          class="form-select"
+          [class.is-invalid]="patientDetailsForm.get('gender')?.invalid && patientDetailsForm.get('gender')?.touched"
+        >
+          <option value="" disabled>Select gender</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Other">Other</option>
+        </select>
+        <div *ngIf="patientDetailsForm.get('gender')?.invalid && patientDetailsForm.get('gender')?.touched" class="invalid-feedback">
+          Gender is required.
+        </div>
+      </div>
+      
+      <!-- Contact Number -->
+      <div class="mb-3">
+        <label for="contactNo" class="form-label">Contact Number <span class="text-danger">*</span></label>
+        <input
+          type="tel"
+          id="contactNo"
+          formControlName="contactNo"
+          class="form-control"
+          placeholder="10-digit mobile number"
+          [class.is-invalid]="patientDetailsForm.get('contactNo')?.invalid && patientDetailsForm.get('contactNo')?.touched"
+        />
+        <div *ngIf="patientDetailsForm.get('contactNo')?.invalid && patientDetailsForm.get('contactNo')?.touched" class="invalid-feedback">
+          <div *ngIf="patientDetailsForm.get('contactNo')?.errors?.['required']">Contact number is required.</div>
+          <div *ngIf="patientDetailsForm.get('contactNo')?.errors?.['pattern']">Contact number must be 10 digits.</div>
+        </div>
+      </div>
+      
+      <!-- Address -->
+      <div class="mb-3">
+        <label for="address" class="form-label">Address <span class="text-danger">*</span></label>
+        <textarea
+          id="address"
+          formControlName="address"
+          class="form-control"
+          rows="3"
+          placeholder="Enter your complete address"
+          [class.is-invalid]="patientDetailsForm.get('address')?.invalid && patientDetailsForm.get('address')?.touched"
+        ></textarea>
+        <div *ngIf="patientDetailsForm.get('address')?.invalid && patientDetailsForm.get('address')?.touched" class="invalid-feedback">
+          <div *ngIf="patientDetailsForm.get('address')?.errors?.['required']">Address is required.</div>
+          <div *ngIf="patientDetailsForm.get('address')?.errors?.['minlength']">Address must be at least 10 characters.</div>
+        </div>
+      </div>
+      
+      <!-- Aadhaar Number -->
+      <div class="mb-3">
+        <label for="aadhaar_no" class="form-label">Aadhaar Number <span class="text-danger">*</span></label>
+        <input
+          type="text"
+          id="aadhaar_no"
+          formControlName="aadhaar_no"
+          class="form-control"
+          placeholder="12-digit Aadhaar number"
+          maxlength="12"
+          [class.is-invalid]="patientDetailsForm.get('aadhaar_no')?.invalid && patientDetailsForm.get('aadhaar_no')?.touched"
+        />
+        <div *ngIf="patientDetailsForm.get('aadhaar_no')?.invalid && patientDetailsForm.get('aadhaar_no')?.touched" class="invalid-feedback">
+          <div *ngIf="patientDetailsForm.get('aadhaar_no')?.errors?.['required']">Aadhaar number is required.</div>
+          <div *ngIf="patientDetailsForm.get('aadhaar_no')?.errors?.['pattern']">Aadhaar number must be exactly 12 digits.</div>
+        </div>
+      </div>
+    
+      
+      <div class="d-grid gap-2">
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="patientDetailsForm.invalid"
+        >
+          Submit Details
+        </button>
+        
+        <!-- <button
+          type="button"
+          class="btn btn-outline-secondary"
+          (click)="skipForNow()"
+        >
+          Skip for Now
+        </button> -->
+      </div>
+    </form>
+    
+    <p class="mt-3 text-center text-muted small">
+      * All fields are required
+    </p>
+  </div>
+</div>

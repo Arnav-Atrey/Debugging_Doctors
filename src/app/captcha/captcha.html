@@ -1,0 +1,34 @@
+<div class="captcha-container mb-3">
+  <label class="form-label">Verify you're human</label>
+  
+  <div class="captcha-canvas-wrapper mb-2">
+    <canvas id="captchaCanvas" width="200" height="60"></canvas>
+    <button 
+      type="button" 
+      class="btn btn-sm btn-outline-secondary ms-2" 
+      (click)="refreshCaptcha()"
+      title="Refresh CAPTCHA"
+    >
+      <i class="bi bi-arrow-clockwise"></i> Refresh
+    </button>
+  </div>
+  
+  <input
+    type="text"
+    class="form-control"
+    placeholder="Enter CAPTCHA code"
+    [(ngModel)]="userInput"
+    (ngModelChange)="onInputChange()"
+    [class.is-invalid]="errorMessage"
+    [class.is-valid]="!errorMessage && userInput.length === captchaCode.length && userInput.toUpperCase() === captchaCode.toUpperCase()"
+    maxlength="6"
+  />
+  
+  <div *ngIf="errorMessage" class="invalid-feedback d-block">
+    {{ errorMessage }}
+  </div>
+  
+  <div *ngIf="!errorMessage && userInput.length === captchaCode.length && userInput.toUpperCase() === captchaCode.toUpperCase()" class="valid-feedback d-block">
+    CAPTCHA verified successfully!
+  </div>
+</div>

@@ -1,0 +1,66 @@
+.container {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+}
+
+.card {
+  border-radius: 15px;
+  border: none;
+}
+
+.card-title {
+  color: #333;
+  font-weight: 600;
+}
+
+.form-label {
+  font-weight: 500;
+  color: #555;
+}
+
+.text-danger {
+  color: #dc3545;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  padding: 10px 20px;
+  font-weight: 500;
+  transition: transform 0.2s;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
+}
+
+.btn-outline-secondary {
+  border-color: #6c757d;
+  color: #6c757d;
+  transition: all 0.2s;
+}
+
+.btn-outline-secondary:hover {
+  background-color: #6c757d;
+  color: white;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.alert {
+  border-radius: 10px;
+}
+
+.text-muted {
+  font-size: 0.875rem;
+}

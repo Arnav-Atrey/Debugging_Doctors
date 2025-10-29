@@ -1,0 +1,61 @@
+<div class="container min-vh-100 d-flex align-items-center justify-content-center">
+  <div class="card p-4 shadow" style="max-width: 400px; width: 100%;">
+    <h2 class="card-title text-center mb-4">Login</h2>
+    
+    <div *ngIf="successMessage" class="alert alert-success alert-dismissible fade show" role="alert">
+      {{ successMessage }}
+      <button type="button" class="btn-close" (click)="successMessage = ''" aria-label="Close"></button>
+    </div>
+    
+    <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
+      {{ errorMessage }}
+      <button type="button" class="btn-close" (click)="errorMessage = ''" aria-label="Close"></button>
+    </div>
+    
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input
+          type="email"
+          id="email"
+          formControlName="email"
+          class="form-control"
+          [class.is-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+        >
+        <div *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" class="invalid-feedback">
+          <div *ngIf="loginForm.get('email')?.errors?.['required']">Email is required.</div>
+          <div *ngIf="loginForm.get('email')?.errors?.['email']">Invalid email format.</div>
+        </div>
+      </div>
+      
+      <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input
+          type="password"
+          id="password"
+          formControlName="pswdHash"
+          class="form-control"
+          [class.is-invalid]="loginForm.get('pswdHash')?.invalid && loginForm.get('pswdHash')?.touched"
+        >
+        <div *ngIf="loginForm.get('pswdHash')?.invalid && loginForm.get('pswdHash')?.touched" class="invalid-feedback">
+          Password is required.
+        </div>
+      </div>
+
+      <!-- Add CAPTCHA Component -->
+      <app-captcha (captchaValidated)="onCaptchaValidated($event)"></app-captcha>
+      
+      <button
+        type="submit"
+        class="btn btn-primary w-100"
+        [disabled]="loginForm.invalid"
+      >
+        Login
+      </button>
+    </form>
+    
+    <p class="mt-3 text-center">
+      Don't have an account? <a routerLink="/home" class="text-primary text-decoration-underline">Register</a>
+    </p>
+  </div>
+</div>

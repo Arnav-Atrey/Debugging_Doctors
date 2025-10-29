@@ -1,0 +1,58 @@
+<div class="container mt-4">
+  <h2 class="mb-4">Find a Doctor</h2>
+
+  <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
+    {{ errorMessage }}
+    <button type="button" class="btn-close" (click)="errorMessage = ''" aria-label="Close"></button>
+  </div>
+
+  <!-- Search and Filter -->
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <input
+        type="text"
+        class="form-control"
+        placeholder="Search by name or specialization..."
+        [(ngModel)]="searchTerm"
+        (input)="filterDoctors()"
+      >
+    </div>
+    <div class="col-md-4">
+      <select class="form-select" [(ngModel)]="selectedSpecialization" (change)="filterDoctors()">
+        <option value="">All Specializations</option>
+        <option *ngFor="let spec of specializations" [value]="spec">{{ spec }}</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="isLoading" class="text-center">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
+  <!-- Doctors List -->
+  <div class="row" *ngIf="!isLoading">
+    <div class="col-md-6 mb-3" *ngFor="let doctor of filteredDoctors">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title">{{ doctor.fullName }}</h5>
+          <p class="card-text">
+            <strong>Specialization:</strong> {{ doctor.specialisation || 'N/A' }}<br>
+            <strong>HPID:</strong> {{ doctor.hpid || 'N/A' }}<br>
+            <strong>Availability:</strong> {{ doctor.availability || 'N/A' }}<br>
+            <strong>Contact:</strong> {{ doctor.contactNo || 'N/A' }}
+          </p>
+          <button class="btn btn-primary" (click)="bookAppointment(doctor.docId)">
+            Book Appointment
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="filteredDoctors.length === 0" class="col-12">
+      <div class="alert alert-info">No doctors found matching your criteria.</div>
+    </div>
+  </div>
+</div>

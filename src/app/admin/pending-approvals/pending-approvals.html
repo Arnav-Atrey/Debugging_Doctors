@@ -1,0 +1,50 @@
+<div class="container mt-4">
+  <h2 class="mb-4">Pending Admin Approvals</h2>
+
+  <div *ngIf="successMessage" class="alert alert-success alert-dismissible fade show">
+    {{ successMessage }}
+    <button type="button" class="btn-close" (click)="successMessage = ''" aria-label="Close"></button>
+  </div>
+
+  <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show">
+    {{ errorMessage }}
+    <button type="button" class="btn-close" (click)="errorMessage = ''" aria-label="Close"></button>
+  </div>
+
+  <div *ngIf="isLoading" class="text-center">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
+  <div *ngIf="!isLoading && pendingAdmins.length === 0" class="alert alert-info">
+    No pending admin approvals.
+  </div>
+
+  <div class="row" *ngIf="!isLoading && pendingAdmins.length > 0">
+    <div class="col-md-6 mb-3" *ngFor="let admin of pendingAdmins">
+      <div class="card border-warning">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <h5 class="card-title">{{ admin.fullName }}</h5>
+            <span class="badge bg-warning text-dark">Pending</span>
+          </div>
+          <p class="card-text">
+            <strong>Email:</strong> {{ admin.email }}<br>
+            <strong>Department:</strong> {{ admin.department || 'N/A' }}<br>
+            <strong>Contact:</strong> {{ admin.contactNo || 'N/A' }}<br>
+            <strong>Applied On:</strong> {{ formatDate(admin.createdAt) }}
+          </p>
+          <div class="d-flex gap-2">
+            <button class="btn btn-success btn-sm" (click)="approveAdmin(admin.adminId)">
+              <i class="bi bi-check-circle me-1"></i>Approve
+            </button>
+            <button class="btn btn-danger btn-sm" (click)="rejectAdmin(admin.adminId)">
+              <i class="bi bi-x-circle me-1"></i>Reject
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

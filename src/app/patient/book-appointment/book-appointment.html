@@ -1,0 +1,108 @@
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-body">
+          <h2 class="card-title mb-4">Book Appointment</h2>
+
+          <div *ngIf="doctor" class="alert alert-info">
+            <strong>Doctor:</strong> {{ doctor.fullName }}<br>
+            <strong>Specialization:</strong> {{ doctor.specialisation }}
+          </div>
+
+          <div *ngIf="successMessage" class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ successMessage }}
+            <button type="button" class="btn-close" (click)="successMessage = ''" aria-label="Close"></button>
+          </div>
+
+          <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ errorMessage }}
+            <button type="button" class="btn-close" (click)="errorMessage = ''" aria-label="Close"></button>
+          </div>
+
+          <form [formGroup]="appointmentForm" (ngSubmit)="onSubmit()">
+            <div class="mb-3">
+              <label for="appointmentDate" class="form-label">Appointment Date</label>
+              <input
+                type="date"
+                id="appointmentDate"
+                formControlName="appointmentDate"
+                class="form-control"
+                [min]="minDate"
+                [max]="maxDate"
+                [class.is-invalid]="appointmentForm.get('appointmentDate')?.invalid && appointmentForm.get('appointmentDate')?.touched"
+              >
+              <div *ngIf="appointmentForm.get('appointmentDate')?.invalid && appointmentForm.get('appointmentDate')?.touched" class="invalid-feedback">
+                <div *ngIf="appointmentForm.get('appointmentDate')?.errors?.['required']">Date is required.</div>
+                <div *ngIf="appointmentForm.get('appointmentDate')?.errors?.['pastDate']">
+                  Cannot book appointments for past dates. Please select today or a future date.
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="appointmentTime" class="form-label">Appointment Time</label>
+              <select
+                id="appointmentTime"
+                formControlName="appointmentTime"
+                class="form-select"
+                [class.is-invalid]="appointmentForm.get('appointmentTime')?.invalid && appointmentForm.get('appointmentTime')?.touched"
+              >
+                <option value="">Select a time slot</option>
+                <option *ngIf="loadingSlots" disabled>Loading available slots...</option>
+                <option *ngIf="!loadingSlots && timeSlots.length === 0 && appointmentForm.value.appointmentDate" disabled>
+                  No slots available for this date
+                </option>
+                <option 
+                  *ngFor="let slot of timeSlots" 
+                  [value]="slot.time"
+                  [disabled]="!slot.available"
+                  [ngClass]="{
+                    'available-slot': slot.available,
+                    'taken-slot': !slot.available
+                  }"
+                >
+                  {{ slot.time }} {{ slot.available ? '✓ Available' : '✗ Unavailable' }}
+                </option>
+              </select>
+              <div *ngIf="appointmentForm.get('appointmentTime')?.invalid && appointmentForm.get('appointmentTime')?.touched" class="invalid-feedback">
+                Time is required.
+              </div>
+              <small class="text-muted">
+                <i class="bi bi-info-circle me-1"></i>
+                Slots marked with ✓ are available. Unavailable slots (past times or taken) are disabled.
+              </small>
+            </div>
+
+            <div class="mb-3">
+              <label for="symptoms" class="form-label">Symptoms / Reason for Visit</label>
+              <textarea
+                id="symptoms"
+                formControlName="symptoms"
+                class="form-control"
+                rows="4"
+                placeholder="Please describe your symptoms or reason for consultation"
+                [class.is-invalid]="appointmentForm.get('symptoms')?.invalid && appointmentForm.get('symptoms')?.touched"
+              ></textarea>
+              <div *ngIf="appointmentForm.get('symptoms')?.invalid && appointmentForm.get('symptoms')?.touched" class="invalid-feedback">
+                Symptoms are required.
+              </div>
+            </div>
+
+            <div class="d-flex gap-2">
+              <button
+                type="submit"
+                class="btn btn-primary"
+                [disabled]="appointmentForm.invalid || isLoading"
+              >
+                <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+                {{ isLoading ? 'Booking...' : 'Book Appointment' }}
+              </button>
+              <a routerLink="/patient/doctors" class="btn btn-secondary">Cancel</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

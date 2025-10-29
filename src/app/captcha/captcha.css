@@ -1,0 +1,7 @@
+.captcha-container canvas {
+  border-radius: 4px;
+}
+
+.captcha-container button {
+  white-space: nowrap;
+}

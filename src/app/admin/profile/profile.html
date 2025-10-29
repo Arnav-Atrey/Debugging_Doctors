@@ -1,0 +1,114 @@
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="card-title mb-0">{{ (adminData?.fullName || 'My Profile') | capitalizeName }}</h2>
+            <button 
+              type="button" 
+              class="btn btn-primary"
+              (click)="toggleEditMode()"
+              *ngIf="!isEditMode"
+            >
+              <i class="bi bi-pencil me-2"></i>Edit Profile
+            </button>
+          </div>
+
+          <div *ngIf="successMessage" class="alert alert-success alert-dismissible fade show">
+            {{ successMessage }}
+            <button type="button" class="btn-close" (click)="successMessage = ''" aria-label="Close"></button>
+          </div>
+
+          <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show">
+            {{ errorMessage }}
+            <button type="button" class="btn-close" (click)="errorMessage = ''" aria-label="Close"></button>
+          </div>
+
+          <!-- Admin Info Badge -->
+          <div class="alert alert-info mb-4" *ngIf="adminData && !isEditMode">
+            <strong>Email:</strong> {{ adminData.email }}<br>
+            <strong>Status:</strong> <span class="badge bg-success">Approved</span><br>
+            <span *ngIf="adminData.approvedByName">
+              <strong>Approved By:</strong> {{ adminData.approvedByName }}<br>
+            </span>
+            <span *ngIf="adminData.approvedAt">
+              <strong>Approved On:</strong> {{ adminData.approvedAt | date: 'medium' }}
+            </span>
+          </div>
+
+          <div *ngIf="isLoading" class="text-center">
+            <div class="spinner-border" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+
+          <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" *ngIf="!isLoading">
+            <div class="mb-3">
+              <label for="fullName" class="form-label">Full Name *</label>
+              <input
+                type="text"
+                id="fullName"
+                formControlName="fullName"
+                class="form-control"
+                [class.is-invalid]="profileForm.get('fullName')?.invalid && profileForm.get('fullName')?.touched"
+              >
+              <div *ngIf="profileForm.get('fullName')?.invalid && profileForm.get('fullName')?.touched" class="invalid-feedback">
+                Full name is required.
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="department" class="form-label">Department</label>
+              <select
+                id="department"
+                formControlName="department"
+                class="form-select"
+              >
+                <option value="">Select Department</option>
+                <option value="Administration">Administration</option>
+                <option value="IT">IT</option>
+                <option value="Operations">Operations</option>
+                <option value="Finance">Finance</option>
+                <option value="Human Resources">Human Resources</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="contactNo" class="form-label">Contact Number</label>
+              <input
+                type="tel"
+                id="contactNo"
+                formControlName="contactNo"
+                class="form-control"
+                placeholder="10-digit number"
+                [class.is-invalid]="profileForm.get('contactNo')?.invalid && profileForm.get('contactNo')?.touched"
+              />
+              <div *ngIf="profileForm.get('contactNo')?.invalid && profileForm.get('contactNo')?.touched" class="invalid-feedback">
+                Please enter a valid 10-digit contact number.
+              </div>
+            </div>
+
+            <div class="d-flex gap-2" *ngIf="isEditMode">
+              <button 
+                type="submit" 
+                class="btn btn-success"
+                [disabled]="profileForm.invalid || isLoading"
+              >
+                <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+                Save Changes
+              </button>
+              <button 
+                type="button" 
+                class="btn btn-secondary"
+                (click)="toggleEditMode()"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
