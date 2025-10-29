@@ -88,6 +88,9 @@ CREATE TABLE Admins (
     CONSTRAINT FK_Admins_Users FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE,
     CONSTRAINT FK_Admins_ApprovedBy FOREIGN KEY (ApprovedBy) REFERENCES Admins(AdminID)
 );
+select * from users
+select * from doctors
+select * from patients
 
 --password is Admin@12345
 INSERT INTO Users (Email, PswdHash, Role, CreatedAt)
@@ -98,7 +101,10 @@ INSERT INTO Admins (UserID, FullName, Department, ContactNo, IsApproved, Approve
 VALUES (@AdminUserId, 'Admin Prime', 'Administration', '9365728476', 1, GETDATE());
 update admins set FullName='Admin Prime' where AdminID=1;
 select * from users
+select * from doctors
+select * from patients
 select * from admins
+select * from appointments
 
 -- Add soft delete columns to Users table
 ALTER TABLE Users
