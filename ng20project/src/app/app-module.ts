@@ -23,7 +23,8 @@ import { DoctorsManagementComponent } from './admin/doctors-management/doctors-m
 import { PatientsManagementComponent } from './admin/patients-management/patients-management';
 import { AppointmentsManagementComponent } from './admin/appointments-management/appointments-management';
 import { AdminProfileComponent } from './admin/profile/profile';
-import { authInterceptor } from './interceptors/auth-interceptor'; // Import the interceptor
+import { authInterceptor } from './interceptors/auth-interceptor';
+import { DeletedRecordsComponent } from './admin/deleted-records/deleted-records'; // Import the interceptor
 
 @NgModule({
   declarations: [
@@ -52,7 +53,8 @@ import { authInterceptor } from './interceptors/auth-interceptor'; // Import the
     DoctorsManagementComponent,
     PatientsManagementComponent,
     AppointmentsManagementComponent,
-    AdminProfileComponent
+    AdminProfileComponent,
+    DeletedRecordsComponent
   ],
   providers: [
     provideBrowserGlobalErrorListeners(),

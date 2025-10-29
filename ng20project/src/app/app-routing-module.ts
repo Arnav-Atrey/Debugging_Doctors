@@ -18,6 +18,8 @@ import { PatientsManagementComponent } from './admin/patients-management/patient
 import { AppointmentsManagementComponent } from './admin/appointments-management/appointments-management';
 import { AdminProfileComponent } from './admin/profile/profile';
 import { AuthGuard } from './guards/auth-guard';
+import { DeletedRecordsComponent } from './admin/deleted-records/deleted-records';
+
 
 const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -37,12 +39,48 @@ const routes: Routes = [
   { path: 'doctor/profile', component: DoctorProfileComponent,canActivate: [AuthGuard],data: { role: 'Doctor' }  },
 
   // Admin Routes
-  { path: 'admin/dashboard', component: AdminDashboardComponent,canActivate: [AuthGuard],data: { role: 'Admin' } },
-  { path: 'admin/pending-approvals', component: PendingApprovalsComponent,canActivate: [AuthGuard],data: { role: 'Admin' } },
-  { path: 'admin/doctors', component: DoctorsManagementComponent,canActivate: [AuthGuard],data: { role: 'Admin' } },
-  { path: 'admin/patients', component: PatientsManagementComponent,canActivate: [AuthGuard],data: { role: 'Admin' } },
-  { path: 'admin/appointments', component: AppointmentsManagementComponent,canActivate: [AuthGuard],data: { role: 'Admin' } },
-  { path: 'admin/profile', component: AdminProfileComponent,canActivate: [AuthGuard],data: { role: 'Admin' } },
+  { 
+    path: 'admin/dashboard', 
+    component: AdminDashboardComponent,
+    canActivate: [AuthGuard],
+    data: { role: 'Admin' }
+  },
+  { 
+    path: 'admin/pending-approvals', 
+    component: PendingApprovalsComponent,
+    canActivate: [AuthGuard],
+    data: { role: 'Admin' }
+  },
+  { 
+    path: 'admin/doctors', 
+    component: DoctorsManagementComponent,
+    canActivate: [AuthGuard],
+    data: { role: 'Admin' }
+  },
+  { 
+    path: 'admin/patients', 
+    component: PatientsManagementComponent,
+    canActivate: [AuthGuard],
+    data: { role: 'Admin' }
+  },
+  { 
+    path: 'admin/appointments', 
+    component: AppointmentsManagementComponent,
+    canActivate: [AuthGuard],
+    data: { role: 'Admin' }
+  },
+  { 
+    path: 'admin/deleted-records', 
+    component: DeletedRecordsComponent,
+    canActivate: [AuthGuard],
+    data: { role: 'Admin' }
+  },
+  { 
+    path: 'admin/profile', 
+    component: AdminProfileComponent,
+    canActivate: [AuthGuard],
+    data: { role: 'Admin' }
+  },
 ];
 
 @NgModule({

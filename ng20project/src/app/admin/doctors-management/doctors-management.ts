@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { DoctorService, Doctor } from '../../services/doctorservices';
 import { FormsModule } from '@angular/forms';
+import { AuthService } from '../../services/authservices';
 
 @Component({
   selector: 'app-doctors-management',
@@ -21,7 +22,10 @@ export class DoctorsManagementComponent implements OnInit {
   errorMessage: string = '';
   successMessage: string = '';
 
-  constructor(private doctorService: DoctorService) {}
+  constructor(
+    private doctorService: DoctorService,
+    private authService: AuthService  // <-- Inject AuthService here
+  ) {}
 
   ngOnInit(): void {
     this.loadDoctors();
@@ -66,4 +70,25 @@ export class DoctorsManagementComponent implements OnInit {
     // Navigate to doctor details or open modal
     console.log('View doctor details:', doctorId);
   }
+
+  softDeleteDoctor(doctorId: number): void {
+  if (!confirm('Are you sure you want to delete this doctor? This can be restored later.')) {
+    return;
+  }
+
+  const user = this.authService.currentUserValue;
+  const adminId = user?.adminId || 0;
+
+  this.doctorService.softDeleteDoctor(doctorId, adminId).subscribe({
+    next: () => {
+      this.successMessage = 'Doctor deleted successfully!';
+      this.loadDoctors();
+      setTimeout(() => this.successMessage = '', 3000);
+    },
+    error: (error) => {
+      console.error('Error deleting doctor:', error);
+      this.errorMessage = 'Failed to delete doctor.';
+    }
+  });
+}
 }

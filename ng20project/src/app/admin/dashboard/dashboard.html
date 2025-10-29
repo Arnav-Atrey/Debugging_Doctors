@@ -63,6 +63,16 @@
     </div>
 
     <div class="col-md-4 mb-4">
+      <div class="card text-white bg-dark">
+        <div class="card-body">
+          <h5 class="card-title">Deleted Records</h5>
+          <h2 class="display-4">{{ deletedRecordsCount || 0 }}</h2>
+          <a routerLink="/admin/deleted-records" class="btn btn-light btn-sm mt-2">View Deleted</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
       <div class="card text-white bg-danger">
         <div class="card-body">
           <h5 class="card-title">Pending Admin Approvals</h5>

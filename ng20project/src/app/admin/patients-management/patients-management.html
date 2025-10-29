@@ -43,6 +43,7 @@
               <th>Gender</th>
               <th>Contact</th>
               <th>Address</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -52,6 +53,12 @@
               <td>{{ patient.gender || 'N/A' }}</td>
               <td>{{ patient.contactNo || 'N/A' }}</td>
               <td>{{ patient.address || 'N/A' }}</td>
+              <td>
+      <button class="btn btn-sm btn-danger" (click)="softDeletePatient(patient.patientId)">
+        <i class="bi bi-trash"></i>
+      </button>
+    </td>
+
             </tr>
             <tr *ngIf="filteredPatients.length === 0">
               <td colspan="9" class="text-center">No patients found</td>

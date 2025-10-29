@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { PatientListDto, PatientService } from '../../services/patientservices';
+import { AuthService } from '../../services/authservices';
 
 // export interface PatientListDto {
 //   patientId: number;
@@ -30,8 +31,13 @@ export class PatientsManagementComponent implements OnInit {
   searchTerm: string = '';
   isLoading: boolean = false;
   errorMessage: string = '';
+  successMessage: string = ''; // <-- Added missing property
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private patientService: PatientService, // <-- Inject PatientService
+    private authService: AuthService        // <-- Inject AuthService
+  ) {}
 
   ngOnInit(): void {
     this.loadPatients();
@@ -39,11 +45,9 @@ export class PatientsManagementComponent implements OnInit {
 
   loadPatients(): void {
     this.isLoading = true;
-    
-    // Get all patients with their user info
+
     this.http.get<any[]>('https://localhost:7090/api/Patients').subscribe({
       next: (patients) => {
-        // Get all users to map email
         this.http.get<any[]>('https://localhost:7090/api/Users').subscribe({
           next: (users) => {
             this.patients = patients.map(patient => {
@@ -56,15 +60,15 @@ export class PatientsManagementComponent implements OnInit {
             this.filteredPatients = this.patients;
             this.isLoading = false;
           },
-          error: (error) => {
+          error: (error: any) => { // <-- Explicit type
             console.error('Error loading users:', error);
-            this.patients = patients;
-            this.filteredPatients = patients;
+            this.patients = patients.map(p => ({ ...p, email: 'N/A' }));
+            this.filteredPatients = this.patients;
             this.isLoading = false;
           }
         });
       },
-      error: (error) => {
+      error: (error: any) => { // <-- Explicit type
         console.error('Error loading patients:', error);
         this.errorMessage = 'Failed to load patients.';
         this.isLoading = false;
@@ -74,10 +78,13 @@ export class PatientsManagementComponent implements OnInit {
 
   filterPatients(): void {
     this.filteredPatients = this.patients.filter(patient => {
-      return patient.fullName.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-             patient.email?.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-             patient.aadhaarNo?.includes(this.searchTerm) ||
-             patient.contactNo?.includes(this.searchTerm);
+      const search = this.searchTerm.toLowerCase();
+      return (
+        patient.fullName.toLowerCase().includes(search) ||
+        (patient.email && patient.email.toLowerCase().includes(search)) ||
+        (patient.aadhaarNo && patient.aadhaarNo.includes(this.searchTerm)) ||
+        (patient.contactNo && patient.contactNo.includes(this.searchTerm))
+      );
     });
   }
 
@@ -96,5 +103,27 @@ export class PatientsManagementComponent implements OnInit {
       age--;
     }
     return age;
+  }
+
+  softDeletePatient(patientId: number): void {
+    if (!confirm('Are you sure you want to delete this patient? This can be restored later.')) {
+      return;
+    }
+
+    const user = this.authService.currentUserValue;
+    const adminId = user?.adminId || 0;
+
+    this.patientService.softDeletePatient(patientId, adminId).subscribe({
+      next: () => {
+        this.successMessage = 'Patient deleted successfully!';
+        this.loadPatients();
+        setTimeout(() => this.successMessage = '', 3000);
+      },
+      error: (error: any) => { // <-- Explicit type
+        console.error('Error deleting patient:', error);
+        this.errorMessage = 'Failed to delete patient.';
+        setTimeout(() => this.errorMessage = '', 3000);
+      }
+    });
   }
 }

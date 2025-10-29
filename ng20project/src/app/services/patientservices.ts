@@ -36,6 +36,7 @@ export interface PatientListDto {
   address?: string;
   aadhaarNo?: string;
   createdAt: string;
+  deletedAt?: string;
 }
 
 @Injectable({
@@ -66,5 +67,23 @@ checkAadhaarExists(aadhaarNo: string, excludePatientId?: number): Observable<{ex
 
 getAllPatients(): Observable<PatientListDto[]> {
   return this.http.get<PatientListDto[]>(`${this.apiUrl}/list`);
+}
+
+softDeletePatient(patientId: number, deletedBy: number): Observable<any> {
+  return this.http.delete(`${this.apiUrl}/${patientId}`, {
+    body: { deletedBy }
+  });
+}
+
+getDeletedPatients(): Observable<PatientListDto[]> {
+  return this.http.get<PatientListDto[]>(`${this.apiUrl}/deleted`);
+}
+
+restorePatient(patientId: number, restoredBy: number): Observable<any> {
+  return this.http.put(`${this.apiUrl}/${patientId}/restore`, { restoredBy });
+}
+
+permanentDeletePatient(patientId: number): Observable<any> {
+  return this.http.delete(`${this.apiUrl}/${patientId}/permanent`);
 }
 }
