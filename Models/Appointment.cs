@@ -24,6 +24,10 @@ public partial class Appointment
     public string InvoiceStatus { get; set; } = null!;
 
     public decimal? InvoiceAmount { get; set; }
+    // Soft Delete properties
+    public bool IsDeleted { get; set; }
+    public DateTime? DeletedAt { get; set; }
+    public int? DeletedBy { get; set; }
 
     public virtual Doctor Doctor { get; set; } = null!;
 

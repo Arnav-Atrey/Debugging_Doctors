@@ -13,6 +13,11 @@ namespace Hospital_Management_system.Models
         public int? ApprovedBy { get; set; }
         public DateTime? ApprovedAt { get; set; }
 
+        // Soft Delete properties
+        public bool IsDeleted { get; set; }
+        public DateTime? DeletedAt { get; set; }
+        public int? DeletedBy { get; set; }
+
         public virtual User User { get; set; } = null!;
 
         // Fix the navigation property with proper foreign key attribute

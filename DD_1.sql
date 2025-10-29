@@ -100,6 +100,42 @@ update admins set FullName='Admin Prime' where AdminID=1;
 select * from users
 select * from admins
 
+-- Add soft delete columns to Users table
+ALTER TABLE Users
+ADD IsDeleted BIT NOT NULL DEFAULT 0,
+    DeletedAt DATETIME NULL,
+    DeletedBy INT NULL;
+
+-- Add soft delete columns to Doctors table
+ALTER TABLE Doctors
+ADD IsDeleted BIT NOT NULL DEFAULT 0,
+    DeletedAt DATETIME NULL,
+    DeletedBy INT NULL;
+
+-- Add soft delete columns to Patients table
+ALTER TABLE Patients
+ADD IsDeleted BIT NOT NULL DEFAULT 0,
+    DeletedAt DATETIME NULL,
+    DeletedBy INT NULL;
+
+-- Add soft delete columns to Appointments table
+ALTER TABLE Appointments
+ADD IsDeleted BIT NOT NULL DEFAULT 0,
+    DeletedAt DATETIME NULL,
+    DeletedBy INT NULL;
+
+-- Add soft delete columns to Admins table
+ALTER TABLE Admins
+ADD IsDeleted BIT NOT NULL DEFAULT 0,
+    DeletedAt DATETIME NULL,
+    DeletedBy INT NULL;
+
+-- Create indexes for better query performance
+CREATE INDEX IX_Users_IsDeleted ON Users(IsDeleted);
+CREATE INDEX IX_Doctors_IsDeleted ON Doctors(IsDeleted);
+CREATE INDEX IX_Patients_IsDeleted ON Patients(IsDeleted);
+CREATE INDEX IX_Appointments_IsDeleted ON Appointments(IsDeleted);
+CREATE INDEX IX_Admins_IsDeleted ON Admins(IsDeleted);
 
 ------------------------------------------------------------------------------------------------------
 CREATE PROCEDURE GetPatientDataForApprovedAppointment

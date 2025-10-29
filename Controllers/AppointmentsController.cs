@@ -612,22 +612,6 @@ namespace Hospital_Management_system.Controllers
             return CreatedAtAction("GetAppointment", new { id = appointment.AppointmentId }, appointment);
         }
 
-        // DELETE: api/Appointments/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteAppointment(int id)
-        {
-            var appointment = await _context.Appointments.FindAsync(id);
-            if (appointment == null)
-            {
-                return NotFound();
-            }
-
-            _context.Appointments.Remove(appointment);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
         [HttpPost("save-prescription")]
         public async Task<IActionResult> SavePrescription([FromBody] PrescriptionDto dto)
         {
@@ -673,6 +657,92 @@ namespace Hospital_Management_system.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Prescription saved and appointment completed successfully" });
+        }
+
+        // DELETE: api/Appointments/5 (Soft Delete)
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin,Doctor,Patient")]
+        public async Task<IActionResult> DeleteAppointment(int id, [FromBody] SoftDeleteDto deleteDto)
+        {
+            var appointment = await _context.Appointments.FindAsync(id);
+            if (appointment == null)
+            {
+                return NotFound();
+            }
+
+            // Check authorization - patients can only delete their own appointments
+            var userRole = User.FindFirst("Role")?.Value;
+            if (userRole == "Patient")
+            {
+                var patientIdClaim = User.FindFirst("PatientId")?.Value;
+                if (patientIdClaim == null || int.Parse(patientIdClaim) != appointment.PatientId)
+                {
+                    return Forbid();
+                }
+            }
+
+            appointment.IsDeleted = true;
+            appointment.DeletedAt = DateTime.UtcNow;
+            appointment.DeletedBy = deleteDto.DeletedBy;
+            appointment.AppointmentStatus = "Cancelled";
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Appointment soft deleted successfully" });
+        }
+
+        // GET: api/Appointments/deleted (Admin only)
+        [HttpGet("deleted")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<IEnumerable<AppointmentResponseDto>>> GetDeletedAppointments()
+        {
+            var deletedAppointments = await _context.Appointments
+                .IgnoreQueryFilters()
+                .Include(a => a.Patient)
+                .Include(a => a.Doctor)
+                .Where(a => a.IsDeleted)
+                .Select(a => new AppointmentResponseDto
+                {
+                    AppointmentId = a.AppointmentId,
+                    PatientId = a.PatientId,
+                    PatientName = a.Patient.FullName,
+                    DoctorId = a.DoctorId,
+                    DoctorName = a.Doctor.FullName,
+                    Specialisation = a.Doctor.Specialisation,
+                    AppointmentDate = a.AppointmentDate,
+                    AppointmentStatus = a.AppointmentStatus,
+                    Symptoms = a.Symptoms,
+                    Diagnosis = a.Diagnosis,
+                    Medicines = a.Medicines,
+                    InvoiceStatus = a.InvoiceStatus,
+                    InvoiceAmount = a.InvoiceAmount
+                })
+                .ToListAsync();
+
+            return deletedAppointments;
+        }
+
+        // PUT: api/Appointments/5/restore (Admin only)
+        [HttpPut("{id}/restore")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> RestoreAppointment(int id)
+        {
+            var appointment = await _context.Appointments
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(a => a.AppointmentId == id && a.IsDeleted);
+
+            if (appointment == null)
+            {
+                return NotFound(new { message = "Deleted appointment not found" });
+            }
+
+            appointment.IsDeleted = false;
+            appointment.DeletedAt = null;
+            appointment.DeletedBy = null;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Appointment restored successfully" });
         }
 
         private bool AppointmentExists(int id)

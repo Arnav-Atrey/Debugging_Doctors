@@ -23,5 +23,10 @@ public partial class Patient
 
     public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 
+    // Soft Delete properties
+    public bool IsDeleted { get; set; }
+    public DateTime? DeletedAt { get; set; }
+    public int? DeletedBy { get; set; }
+
     public virtual User User { get; set; } = null!;
 }

@@ -1,12 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Hospital_Management_system.Models;
+using Hospital_Management_system.Models.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Hospital_Management_system.Models;
-using Hospital_Management_system.Models.DTOs;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Hospital_Management_system.Controllers
 {
@@ -178,11 +179,86 @@ namespace Hospital_Management_system.Controllers
             return CreatedAtAction("GetPatient", new { id = patient.PatientId }, patient);
         }
 
-        // DELETE: api/Patients/5
+        // GET: api/Patients/deleted (Admin only)
+        [HttpGet("deleted")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<IEnumerable<PatientListDto>>> GetDeletedPatients()
+        {
+            var deletedPatients = await _context.Patients
+                .IgnoreQueryFilters()
+                .Include(p => p.User)
+                .Where(p => p.IsDeleted)
+                .Select(p => new PatientListDto
+                {
+                    PatientId = p.PatientId,
+                    UserId = p.UserId,
+                    FullName = p.FullName,
+                    Email = p.User.Email,
+                    Dob = p.Dob,
+                    Age = CalculateAge(p.Dob),
+                    Gender = p.Gender,
+                    ContactNo = p.ContactNo,
+                    Address = p.Address,
+                    Aadhaar_no = p.Aadhaar_no,
+                    CreatedAt = p.User.CreatedAt
+                })
+                .ToListAsync();
+
+            return deletedPatients;
+        }
+
+        // DELETE: api/Patients/5 (Soft Delete)
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeletePatient(int id)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeletePatient(int id, [FromBody] SoftDeleteDto deleteDto)
         {
             var patient = await _context.Patients.FindAsync(id);
+            if (patient == null)
+            {
+                return NotFound();
+            }
+
+            patient.IsDeleted = true;
+            patient.DeletedAt = DateTime.UtcNow;
+            patient.DeletedBy = deleteDto.DeletedBy;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Patient soft deleted successfully" });
+        }
+
+        // PUT: api/Patients/5/restore (Admin only)
+        [HttpPut("{id}/restore")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> RestorePatient(int id)
+        {
+            var patient = await _context.Patients
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(p => p.PatientId == id && p.IsDeleted);
+
+            if (patient == null)
+            {
+                return NotFound(new { message = "Deleted patient not found" });
+            }
+
+            patient.IsDeleted = false;
+            patient.DeletedAt = null;
+            patient.DeletedBy = null;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Patient restored successfully" });
+        }
+
+        // DELETE: api/Patients/5/permanent (Hard Delete)
+        [HttpDelete("{id}/permanent")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> PermanentDeletePatient(int id)
+        {
+            var patient = await _context.Patients
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(p => p.PatientId == id);
+
             if (patient == null)
             {
                 return NotFound();
@@ -191,7 +267,7 @@ namespace Hospital_Management_system.Controllers
             _context.Patients.Remove(patient);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new { message = "Patient permanently deleted" });
         }
 
         private bool PatientExists(int id)

@@ -27,7 +27,22 @@ namespace Hospital_Management_system.Controllers
         [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<Doctor>>> GetDoctors()
         {
+            // Query filter automatically excludes soft-deleted records
             return await _context.Doctors.ToListAsync();
+        }
+
+        // GET: api/Doctors/deleted (Admin only)
+        [HttpGet("deleted")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<IEnumerable<Doctor>>> GetDeletedDoctors()
+        {
+            // Use IgnoreQueryFilters to get deleted records
+            var deletedDoctors = await _context.Doctors
+                .IgnoreQueryFilters()
+                .Where(d => d.IsDeleted)
+                .ToListAsync();
+
+            return deletedDoctors;
         }
 
         // GET: api/Doctors/5
@@ -130,9 +145,10 @@ namespace Hospital_Management_system.Controllers
             return CreatedAtAction("GetDoctor", new { id = doctor.DocId }, doctor);
         }
 
-        // DELETE: api/Doctors/5
+        // DELETE: api/Doctors/5 (Soft Delete)
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteDoctor(int id)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteDoctor(int id, [FromBody] SoftDeleteDto deleteDto)
         {
             var doctor = await _context.Doctors.FindAsync(id);
             if (doctor == null)
@@ -140,10 +156,60 @@ namespace Hospital_Management_system.Controllers
                 return NotFound();
             }
 
+            // Soft delete
+            doctor.IsDeleted = true;
+            doctor.DeletedAt = DateTime.UtcNow;
+            doctor.DeletedBy = deleteDto.DeletedBy;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Doctor soft deleted successfully" });
+        }
+
+        // PUT: api/Doctors/5/restore (Admin only)
+        [HttpPut("{id}/restore")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> RestoreDoctor(int id, [FromBody] RestoreDto restoreDto)
+        {
+            // Use IgnoreQueryFilters to find soft-deleted doctor
+            var doctor = await _context.Doctors
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(d => d.DocId == id && d.IsDeleted);
+
+            if (doctor == null)
+            {
+                return NotFound(new { message = "Deleted doctor not found" });
+            }
+
+            // Restore
+            doctor.IsDeleted = false;
+            doctor.DeletedAt = null;
+            doctor.DeletedBy = null;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Doctor restored successfully" });
+        }
+
+        // DELETE: api/Doctors/5/permanent (Admin only - Hard Delete)
+        [HttpDelete("{id}/permanent")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> PermanentDeleteDoctor(int id)
+        {
+            var doctor = await _context.Doctors
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(d => d.DocId == id);
+
+            if (doctor == null)
+            {
+                return NotFound();
+            }
+
+            // Use Remove instead of setting IsDeleted to perform hard delete
             _context.Doctors.Remove(doctor);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new { message = "Doctor permanently deleted" });
         }
 
         // GET: api/Doctors/specialization/{specialization}

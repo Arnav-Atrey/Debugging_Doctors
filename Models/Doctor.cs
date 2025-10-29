@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Hospital_Management_system.Models;
 
-public partial class Doctor
+public partial class Doctor : ISoftDeletable
 {
     public int DocId { get; set; }
 
@@ -20,6 +20,11 @@ public partial class Doctor
     public string? ContactNo { get; set; }
 
     public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
+
+    // Soft Delete properties
+    public bool IsDeleted { get; set; }
+    public DateTime? DeletedAt { get; set; }
+    public int? DeletedBy { get; set; }
 
     public virtual User User { get; set; } = null!;
 }

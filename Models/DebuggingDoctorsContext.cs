@@ -32,6 +32,13 @@ public partial class DebuggingDoctorsContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // Apply global query filters for soft delete
+        modelBuilder.Entity<User>().HasQueryFilter(u => !u.IsDeleted);
+        modelBuilder.Entity<Doctor>().HasQueryFilter(d => !d.IsDeleted);
+        modelBuilder.Entity<Patient>().HasQueryFilter(p => !p.IsDeleted);
+        modelBuilder.Entity<Appointment>().HasQueryFilter(a => !a.IsDeleted);
+        modelBuilder.Entity<Admin>().HasQueryFilter(a => !a.IsDeleted);
+
         modelBuilder.Entity<Appointment>(entity =>
         {
             entity.HasKey(e => e.AppointmentId).HasName("PK__Appointm__8ECDFCA231D090B1");
@@ -137,6 +144,39 @@ public partial class DebuggingDoctorsContext : DbContext
 
         base.OnModelCreating(modelBuilder);
     
+    }
+
+    // Override SaveChanges to implement soft delete
+    public override int SaveChanges()
+    {
+        UpdateSoftDeleteStatuses();
+        return base.SaveChanges();
+    }
+
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        UpdateSoftDeleteStatuses();
+        return base.SaveChangesAsync(cancellationToken);
+    }
+
+    private void UpdateSoftDeleteStatuses()
+    {
+        foreach (var entry in ChangeTracker.Entries())
+        {
+            if (entry.Entity is ISoftDeletable entity)
+            {
+                switch (entry.State)
+                {
+                    case EntityState.Deleted:
+                        // Change from deleted to modified
+                        entry.State = EntityState.Modified;
+                        entity.IsDeleted = true;
+                        entity.DeletedAt = DateTime.UtcNow;
+                        // DeletedBy should be set by the controller
+                        break;
+                }
+            }
+        }
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
