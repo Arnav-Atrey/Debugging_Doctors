@@ -46,29 +46,27 @@ export class PatientsManagementComponent implements OnInit {
   loadPatients(): void {
     this.isLoading = true;
 
-    this.http.get<any[]>('https://localhost:7090/api/Patients').subscribe({
+    // Use the PatientService to get the list endpoint which has all data
+    this.http.get<any[]>('https://localhost:7090/api/Patients/list').subscribe({
       next: (patients) => {
-        this.http.get<any[]>('https://localhost:7090/api/Users').subscribe({
-          next: (users) => {
-            this.patients = patients.map(patient => {
-              const user = users.find(u => u.userId === patient.userId);
-              return {
-                ...patient,
-                email: user?.email || 'N/A'
-              };
-            });
-            this.filteredPatients = this.patients;
-            this.isLoading = false;
-          },
-          error: (error: any) => { // <-- Explicit type
-            console.error('Error loading users:', error);
-            this.patients = patients.map(p => ({ ...p, email: 'N/A' }));
-            this.filteredPatients = this.patients;
-            this.isLoading = false;
-          }
-        });
+        this.patients = patients.map(patient => ({
+          patientId: patient.patientId,
+          userId: patient.userId,
+          fullName: patient.fullName,
+          email: patient.email,
+          dob: patient.dob,
+          age: patient.age,
+          gender: patient.gender,
+          contactNo: patient.contactNo,
+          address: patient.address,
+          aadhaarNo: patient.aadhaar_no || patient.aadhaarNo,
+          createdAt: patient.createdAt
+        }));
+        this.filteredPatients = this.patients;
+        this.isLoading = false;
+        console.log('Loaded patients:', this.patients);
       },
-      error: (error: any) => { // <-- Explicit type
+      error: (error: any) => {
         console.error('Error loading patients:', error);
         this.errorMessage = 'Failed to load patients.';
         this.isLoading = false;
@@ -103,6 +101,28 @@ export class PatientsManagementComponent implements OnInit {
       age--;
     }
     return age;
+  }
+
+  viewPatientDetails(patientId: number): void {
+    const patient = this.patients.find(p => p.patientId === patientId);
+    if (patient) {
+      const dobDisplay = patient.dob ? this.formatDate(patient.dob) : 'N/A';
+      const age = patient.dob ? this.calculateAge(patient.dob) : (patient['age'] ?? 'N/A');
+      const message = `
+        Patient Details:
+        Name: ${patient.fullName}
+        Email: ${patient.email || 'N/A'}
+        DOB: ${dobDisplay}
+        Age: ${age}
+        Gender: ${patient.gender || 'N/A'}
+        Contact: ${patient.contactNo || 'N/A'}
+        Address: ${patient.address || 'N/A'}
+        Aadhaar: ${patient.aadhaarNo || 'N/A'}
+      `;
+      alert(message);
+    } else {
+      alert('Patient not found.');
+    }
   }
 
   softDeletePatient(patientId: number): void {

@@ -186,9 +186,9 @@ BEGIN
             -- Retrieve patient data
             SELECT 
                 p.PatientId,
-                p.Name,
-                p.AadhaarNo,
-                p.Contact, -- Adjust based on actual Patient table columns
+                p.FullName,
+                p.Aadhaar_no,
+                p.ContactNo, -- Adjust based on actual Patient table columns
                 p.DOB,    -- Adjust based on actual Patient table columns
                 a.AppointmentId,
                 a.AppointmentDate,

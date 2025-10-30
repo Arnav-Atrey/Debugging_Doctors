@@ -188,23 +188,25 @@ namespace Hospital_Management_system.Controllers
                 .IgnoreQueryFilters()
                 .Include(p => p.User)
                 .Where(p => p.IsDeleted)
-                .Select(p => new PatientListDto
-                {
-                    PatientId = p.PatientId,
-                    UserId = p.UserId,
-                    FullName = p.FullName,
-                    Email = p.User.Email,
-                    Dob = p.Dob,
-                    Age = CalculateAge(p.Dob),
-                    Gender = p.Gender,
-                    ContactNo = p.ContactNo,
-                    Address = p.Address,
-                    Aadhaar_no = p.Aadhaar_no,
-                    CreatedAt = p.User.CreatedAt
-                })
                 .ToListAsync();
 
-            return deletedPatients;
+            // Calculate age in memory after fetching from database
+            var patientDtos = deletedPatients.Select(p => new PatientListDto
+            {
+                PatientId = p.PatientId,
+                UserId = p.UserId,
+                FullName = p.FullName,
+                Email = p.User.Email,
+                Dob = p.Dob,
+                Age = CalculateAge(p.Dob),
+                Gender = p.Gender,
+                ContactNo = p.ContactNo,
+                Address = p.Address,
+                Aadhaar_no = p.Aadhaar_no,
+                CreatedAt = p.User.CreatedAt
+            }).ToList();
+
+            return patientDtos;
         }
 
         // DELETE: api/Patients/5 (Soft Delete)

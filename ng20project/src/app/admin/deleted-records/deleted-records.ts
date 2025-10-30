@@ -108,15 +108,19 @@ export class DeletedRecordsComponent implements OnInit {
       return;
     }
 
+    this.isLoading = true;
     this.doctorService.permanentDeleteDoctor(doctorId).subscribe({
       next: () => {
         this.successMessage = 'Doctor permanently deleted.';
-        this.loadDeletedRecords();
+        this.isLoading = false;
+        // Remove from local array immediately for UI update
+        this.deletedDoctors = this.deletedDoctors.filter(d => d.docId !== doctorId);
         setTimeout(() => this.successMessage = '', 3000);
       },
       error: (error) => {
         console.error('Error permanently deleting doctor:', error);
         this.errorMessage = 'Failed to permanently delete doctor.';
+        this.isLoading = false;
       }
     });
   }
@@ -126,15 +130,19 @@ export class DeletedRecordsComponent implements OnInit {
       return;
     }
 
+    this.isLoading = true;
     this.patientService.permanentDeletePatient(patientId).subscribe({
       next: () => {
         this.successMessage = 'Patient permanently deleted.';
-        this.loadDeletedRecords();
+        this.isLoading = false;
+        // Remove from local array immediately for UI update
+        this.deletedPatients = this.deletedPatients.filter(p => p.patientId !== patientId);
         setTimeout(() => this.successMessage = '', 3000);
       },
       error: (error) => {
         console.error('Error permanently deleting patient:', error);
         this.errorMessage = 'Failed to permanently delete patient.';
+        this.isLoading = false;
       }
     });
   }

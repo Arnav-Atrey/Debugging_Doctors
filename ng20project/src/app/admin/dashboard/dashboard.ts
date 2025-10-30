@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router, NavigationEnd } from '@angular/router';
 import { AdminService, AdminStatsDto } from '../../services/adminservices';
 import { DoctorService } from '../../services/doctorservices';
 import { PatientService } from '../../services/patientservices';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Subscription } from 'rxjs';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -13,21 +14,38 @@ import { forkJoin } from 'rxjs';
   standalone: true,
   imports: [CommonModule, RouterLink]
 })
-export class AdminDashboardComponent implements OnInit {
+export class AdminDashboardComponent implements OnInit, OnDestroy {
   stats: AdminStatsDto | null = null;
   deletedRecordsCount: number = 0;
   isLoading: boolean = false;
   errorMessage: string = '';
+  private routerSubscription?: Subscription;
 
   constructor(
     private adminService: AdminService,
     private doctorService: DoctorService,
-    private patientService: PatientService
+    private patientService: PatientService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
     this.loadStats();
     this.loadDeletedRecordsCount();
+    
+    // Reload counts when navigating back to dashboard
+    this.routerSubscription = this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event: any) => {
+      if (event.url === '/admin/dashboard') {
+        this.loadDeletedRecordsCount();
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.routerSubscription) {
+      this.routerSubscription.unsubscribe();
+    }
   }
 
   loadDeletedRecordsCount(): void {
@@ -37,9 +55,11 @@ export class AdminDashboardComponent implements OnInit {
     }).subscribe({
       next: ({ doctors, patients }) => {
         this.deletedRecordsCount = doctors.length + patients.length;
+        console.log('Deleted records count updated:', this.deletedRecordsCount);
       },
       error: (error) => {
         console.error('Error loading deleted records count:', error);
+        this.deletedRecordsCount = 0;
       }
     });
   }

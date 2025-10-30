@@ -1,0 +1,8 @@
+things that are not working:
+1) when admin wants to permanently delete a doctor, despite pressing yes and the application 
+confirming that it has been deleted, the permanent delete and restore buttons are still coming. 
+It shouldnt come once permanently deleted
+2) when admin wants to permanently delete a patient, it is failing to fetch the deleted Patients
+3) the total deleted records is not adding up in the admin dashboard under "deleted records".
+It is coming as 0.
+

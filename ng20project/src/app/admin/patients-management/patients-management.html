@@ -54,10 +54,13 @@
               <td>{{ patient.contactNo || 'N/A' }}</td>
               <td>{{ patient.address || 'N/A' }}</td>
               <td>
-      <button class="btn btn-sm btn-danger" (click)="softDeletePatient(patient.patientId)">
-        <i class="bi bi-trash"></i>
-      </button>
-    </td>
+                <button class="btn btn-sm btn-info me-1" (click)="viewPatientDetails(patient.patientId)">
+                  <i class="bi bi-eye"></i> View
+                </button>
+                <button class="btn btn-sm btn-danger" (click)="softDeletePatient(patient.patientId)">
+                  <i class="bi bi-trash"></i> Delete
+                </button>
+              </td>
 
             </tr>
             <tr *ngIf="filteredPatients.length === 0">

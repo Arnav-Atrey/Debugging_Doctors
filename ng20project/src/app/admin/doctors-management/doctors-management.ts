@@ -66,9 +66,19 @@ export class DoctorsManagementComponent implements OnInit {
     });
   }
 
-  viewDoctorDetails(doctorId: number): void {
-    // Navigate to doctor details or open modal
-    console.log('View doctor details:', doctorId);
+    viewDoctorDetails(doctorId: number): void {
+    const doctor = this.doctors.find(d => d.docId === doctorId);
+    if (doctor) {
+      const message = `
+        Doctor Details:
+        Name: ${doctor.fullName}
+        Specialization: ${doctor.specialisation || 'N/A'}
+        HPID: ${doctor.hpid || 'N/A'}
+        Contact: ${doctor.contactNo || 'N/A'}
+        Availability: ${doctor.availability || 'N/A'}
+      `;
+      alert(message);
+    }
   }
 
   softDeleteDoctor(doctorId: number): void {
@@ -82,7 +92,9 @@ export class DoctorsManagementComponent implements OnInit {
   this.doctorService.softDeleteDoctor(doctorId, adminId).subscribe({
     next: () => {
       this.successMessage = 'Doctor deleted successfully!';
-      this.loadDoctors();
+      // Remove from local array immediately
+      this.doctors = this.doctors.filter(d => d.docId !== doctorId);
+      this.filterDoctors();
       setTimeout(() => this.successMessage = '', 3000);
     },
     error: (error) => {
