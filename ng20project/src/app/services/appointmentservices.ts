@@ -34,6 +34,7 @@ export interface AppointmentResponseDto {
   medicines?: string;
   invoiceStatus: string;
   invoiceAmount?: number;
+  age?: number;
 }
 
 export interface AppointmentActionDto {

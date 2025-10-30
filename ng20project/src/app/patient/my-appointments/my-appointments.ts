@@ -2,13 +2,14 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AppointmentService, AppointmentResponseDto } from '../../services/appointmentservices';
+import { PrescriptionComponent } from '../../prescription/prescription.component';
 
 @Component({
   selector: 'app-my-appointments',
   templateUrl: './my-appointments.html',
   styleUrls: ['./my-appointments.css'],
   standalone: true,
-  imports: [CommonModule, RouterLink]
+  imports: [CommonModule, RouterLink, PrescriptionComponent]
 })
 export class MyAppointmentsComponent implements OnInit {
   appointments: AppointmentResponseDto[] = [];
@@ -16,6 +17,9 @@ export class MyAppointmentsComponent implements OnInit {
   errorMessage: string = '';
   successMessage: string = '';
   isLoading: boolean = false;
+  showPrescriptionModal: boolean = false;
+  selectedAppointmentForPrescription: AppointmentResponseDto | null = null;
+
 
   constructor(private appointmentService: AppointmentService) {}
 
@@ -88,4 +92,14 @@ export class MyAppointmentsComponent implements OnInit {
   canCancel(status: string): boolean {
     return status === 'Pending' || status === 'Confirmed';
   }
+
+  viewPrescription(appointment: AppointmentResponseDto): void {
+  this.selectedAppointmentForPrescription = appointment;
+  this.showPrescriptionModal = true;
+}
+
+closePrescriptionModal(): void {
+  this.showPrescriptionModal = false;
+  this.selectedAppointmentForPrescription = null;
+}
 }

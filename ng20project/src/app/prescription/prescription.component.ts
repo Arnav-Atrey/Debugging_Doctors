@@ -28,6 +28,7 @@ export class PrescriptionComponent implements OnInit {
   @Input() doctorId!: number;
   @Input() patient: any = { name: 'N/A', age: 0, date: null };
   @Input() doctor: any = { name: 'N/A', info: 'N/A' };
+  @Input() mode: 'create' | 'view' = 'create'; // New input for mode
   @Output() save = new EventEmitter<any>();
   @Output() cancel = new EventEmitter<void>();
 
@@ -36,23 +37,23 @@ export class PrescriptionComponent implements OnInit {
   pastHistory = '';
   examination = '';
   advice = '';
+  invoiceAmount: number | null = null;
   medicines: Medicine[] = [];
+  isLoading = false;
+  errorMessage = '';
 
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
     if (this.appointmentId) {
-      this.loadPrescription();
+      if (this.mode === 'view') {
+        this.isEditMode = false;
+        this.loadPrescription();
+      } else {
+        this.loadPrescription(); // Try to load existing prescription
+      }
       this.fetchPatientData();
       this.fetchDoctorData();
-    } else {
-      console.error('Appointment ID is undefined');
-      this.patient = {
-        name: this.patient.name || 'N/A',
-        age: this.patient.age || 0,
-        date: this.patient.date ? new Date(this.patient.date) : null
-      };
-      this.doctor = { name: 'N/A', info: 'N/A' };
     }
     if (!this.medicines.length) {
       this.addMedicine();
@@ -60,40 +61,31 @@ export class PrescriptionComponent implements OnInit {
   }
 
   fetchPatientData() {
-  if (!this.appointmentId || !this.doctorId) {
-    console.error('Cannot fetch patient data: appointmentId or doctorId is undefined', {
-      appointmentId: this.appointmentId,
-      doctorId: this.doctorId
-    });
-    return;
-  }
-  this.http.get(`https://localhost:7090/api/Appointments/patient-data`, {
-  params: {
-    appointmentId: this.appointmentId.toString(),
-    doctorId: this.doctorId.toString(),  // Changed from userId
-    userRole: 'Doctor'
-  }
-}).subscribe({
-    next: (data: any) => {
-      console.log('Patient data response:', data);
-      this.patient = {
-        name: data.fullName || 'N/A',
-        age: data.age || 0,
-        date: data.appointmentDate ? new Date(data.appointmentDate) : null
-      };
-      console.log('Updated patient data:', this.patient);
-    },
-    error: (err) => {
-      console.error('Error fetching patient data:', err);
-      this.patient = {
-        name: this.patient.name || 'N/A',
-        age: 0,
-        date: this.patient.date ? new Date(this.patient.date) : null
-      };
-      console.log('Fallback patient data:', this.patient);
+    if (!this.appointmentId || !this.doctorId) {
+      console.error('Cannot fetch patient data: appointmentId or doctorId is undefined');
+      return;
     }
-  });
-}
+    this.http.get(`https://localhost:7090/api/Appointments/patient-data`, {
+      params: {
+        appointmentId: this.appointmentId.toString(),
+        doctorId: this.doctorId.toString(),
+        userRole: 'Doctor'
+      }
+    }).subscribe({
+      next: (data: any) => {
+        this.patient = {
+          name: data.fullName || 'N/A',
+          age: data.age || 0,
+          date: data.appointmentDate ? new Date(data.appointmentDate) : null,
+          gender: data.gender || 'N/A',
+          contactNo: data.contactNo || 'N/A'
+        };
+      },
+      error: (err) => {
+        console.error('Error fetching patient data:', err);
+      }
+    });
+  }
 
   fetchDoctorData() {
     if (!this.doctorId) {
@@ -102,56 +94,55 @@ export class PrescriptionComponent implements OnInit {
     }
     this.http.get(`https://localhost:7090/api/Doctors/${this.doctorId}`).subscribe({
       next: (data: any) => {
-        console.log('Doctor data response:', data);
         this.doctor = {
-          name: data.fullName || data.FullName || 'N/A',
-          info: data.specialisation || data.Specialisation || 'N/A'
+          name: data.fullName || 'N/A',
+          info: data.specialisation || 'N/A',
+          hpid: data.hpid || 'N/A'
         };
-        console.log('Updated doctor data:', this.doctor);
       },
       error: (err) => {
         console.error('Error fetching doctor data:', err);
-        this.doctor = { name: 'N/A', info: 'N/A' };
-        console.log('Fallback doctor data:', this.doctor);
       }
     });
   }
 
   loadPrescription() {
     if (!this.appointmentId) {
-      console.error('Cannot load prescription: appointmentId is undefined');
       return;
     }
-    this.http.get(`https://localhost:7090/api/Appointments/${this.appointmentId}/prescription`).subscribe({
+    this.isLoading = true;
+    this.http.get(`https://localhost:7090/api/Prescriptions/appointment/${this.appointmentId}`).subscribe({
       next: (prescription: any) => {
-        console.log('Prescription data response:', prescription);
-        this.chiefComplaints = prescription.ChiefComplaints || '';
-        this.pastHistory = prescription.PastHistory || '';
-        this.examination = prescription.Examination || '';
-        this.advice = prescription.Advice || '';
-        this.medicines = prescription.Medicines && prescription.Medicines.length
-          ? prescription.Medicines.map((m: any, i: number) => ({
-              slNo: m.SlNo || i + 1,
-              name: m.Name || '',
-              morningBefore: m.MorningBefore || 0,
-              morningAfter: m.MorningAfter || 0,
-              afternoonBefore: m.AfternoonBefore || 0,
-              afternoonAfter: m.AfternoonAfter || 0,
-              nightBefore: m.NightBefore || 0,
-              nightAfter: m.NightAfter || 0,
-              days: m.Days || 0
+        this.chiefComplaints = prescription.chiefComplaints || '';
+        this.pastHistory = prescription.pastHistory || '';
+        this.examination = prescription.examination || '';
+        this.advice = prescription.advice || '';
+        this.medicines = prescription.medicines && prescription.medicines.length
+          ? prescription.medicines.map((m: any, i: number) => ({
+              slNo: m.slNo || i + 1,
+              name: m.name || '',
+              morningBefore: m.morningBefore || 0,
+              morningAfter: m.morningAfter || 0,
+              afternoonBefore: m.afternoonBefore || 0,
+              afternoonAfter: m.afternoonAfter || 0,
+              nightBefore: m.nightBefore || 0,
+              nightAfter: m.nightAfter || 0,
+              days: m.days || 0
             }))
           : [this.createEmptyMedicine()];
-        this.isEditMode = false;
+        
+        if (this.mode === 'view') {
+          this.isEditMode = false;
+        }
+        this.isLoading = false;
       },
       error: (err) => {
-        console.warn('No prescription found for this appointment, initializing empty form:', err);
-        this.chiefComplaints = '';
-        this.pastHistory = '';
-        this.examination = '';
-        this.advice = '';
+        console.warn('No prescription found, initializing empty form');
+        if (this.mode === 'create') {
+          this.isEditMode = true;
+        }
         this.medicines = [this.createEmptyMedicine()];
-        this.isEditMode = true;
+        this.isLoading = false;
       }
     });
   }
@@ -180,25 +171,65 @@ export class PrescriptionComponent implements OnInit {
   }
 
   savePrescription() {
+    // Validate invoice amount for create mode
+    if (this.mode === 'create' && (!this.invoiceAmount || this.invoiceAmount <= 0)) {
+      this.errorMessage = 'Please enter a valid invoice amount to complete the appointment.';
+      return;
+    }
+
+    // Validate that at least one medicine is properly filled
+    const validMedicines = this.medicines.filter(m => m.name && m.name.trim() !== '');
+    if (validMedicines.length === 0) {
+      this.errorMessage = 'Please add at least one medicine to the prescription.';
+      return;
+    }
+
     this.isEditMode = false;
-    this.save.emit({
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    const prescriptionData = {
       AppointmentId: this.appointmentId,
-      ChiefComplaints: this.chiefComplaints,
-      PastHistory: this.pastHistory,
-      Examination: this.examination,
-      Medicines: this.medicines.map(m => ({
-        SlNo: m.slNo,
-        Name: m.name,
-        MorningBefore: m.morningBefore,
-        MorningAfter: m.morningAfter,
-        AfternoonBefore: m.afternoonBefore,
-        AfternoonAfter: m.afternoonAfter,
-        NightBefore: m.nightBefore,
-        NightAfter: m.nightAfter,
-        Days: m.days
-      })),
-      Advice: this.advice,
-      Diagnosis: ''
+      ChiefComplaints: this.chiefComplaints || 'Not provided',
+      PastHistory: this.pastHistory || 'Not provided',
+      Examination: this.examination || 'Not provided',
+      Medicines: this.medicines
+        .filter(m => m.name && m.name.trim() !== '')
+        .map(m => ({
+          SlNo: m.slNo,
+          Name: m.name,
+          MorningBefore: m.morningBefore,
+          MorningAfter: m.morningAfter,
+          AfternoonBefore: m.afternoonBefore,
+          AfternoonAfter: m.afternoonAfter,
+          NightBefore: m.nightBefore,
+          NightAfter: m.nightAfter,
+          Days: m.days
+        })),
+      Advice: this.advice || 'Follow-up as needed',
+      Diagnosis: this.chiefComplaints || 'Consultation provided',
+      InvoiceAmount: this.invoiceAmount
+    };
+
+    const endpoint = this.mode === 'create' 
+      ? 'https://localhost:7090/api/Prescriptions/save-with-completion'
+      : 'https://localhost:7090/api/Prescriptions/save-with-completion'; // Same endpoint works for both
+
+    this.http.post(endpoint, prescriptionData).subscribe({
+      next: (response: any) => {
+        this.isLoading = false;
+        this.save.emit({ 
+          success: true, 
+          message: response.message,
+          invoiceAmount: response.invoiceAmount 
+        });
+      },
+      error: (err) => {
+        console.error('Error saving prescription:', err);
+        this.errorMessage = err.error?.message || 'Failed to save prescription. Please try again.';
+        this.isLoading = false;
+        this.isEditMode = true;
+      }
     });
   }
 
@@ -207,31 +238,208 @@ export class PrescriptionComponent implements OnInit {
     this.cancel.emit();
   }
 
+  enableEdit() {
+    if (this.mode === 'view') {
+      this.isEditMode = true;
+    }
+  }
+
   downloadPDF() {
     const doc = new jsPDF();
+    const lineHeight = 7;
+    let y = 20;
+
+    // Header
     doc.setFontSize(18);
-    doc.text('SwasthaTech Hospital', 105, 20, { align: 'center' });
-    doc.setFontSize(12);
-    doc.text(`Doctor: ${this.doctor.name || 'N/A'} - ${this.doctor.info || 'N/A'}`, 150, 30, { align: 'right' });
-    doc.text(`Patient: ${this.patient.name || 'N/A'}`, 20, 50);
-    doc.text(`Age: ${this.patient.age || 0}`, 20, 60);
-    doc.text(`Date: ${this.patient.date ? this.patient.date.toDateString() : 'N/A'}`, 20, 70);
-    doc.text('Chief Complaints & History:', 20, 80);
-    doc.text(this.chiefComplaints || 'N/A', 20, 90);
-    doc.text('Past History:', 20, 100);
-    doc.text(this.pastHistory || 'N/A', 20, 110);
-    doc.text('Examination:', 20, 120);
-    doc.text(this.examination || 'N/A', 20, 130);
-    doc.text('Medicines Prescribed:', 20, 140);
-    let y = 150;
-    this.medicines.forEach(med => {
-      doc.text(`${med.slNo}. ${med.name || 'N/A'} - Morning: ${med.morningBefore}/${med.morningAfter}, Afternoon: ${med.afternoonBefore}/${med.afternoonAfter}, Night: ${med.nightBefore}/${med.nightAfter}, Days: ${med.days}`, 20, y);
-      y += 10;
+    doc.setFont('helvetica', 'bold');
+    doc.text('SwasthaTech Hospital', 105, y, { align: 'center' });
+    
+    y += lineHeight + 5;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Bellandur, Bengaluru - 560103 | +91 8888666623', 105, y, { align: 'center' });
+    
+    y += lineHeight + 5;
+    doc.line(20, y, 190, y);
+    y += 10;
+
+    // Doctor Info
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Dr. ${this.doctor.name || 'N/A'}`, 150, y, { align: 'right' });
+    y += lineHeight;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.text(`${this.doctor.info || 'N/A'}`, 150, y, { align: 'right' });
+    doc.text(`HPID: ${this.doctor.hpid || 'N/A'}`, 150, y + 5, { align: 'right' });
+    
+    y += lineHeight + 8;
+
+    // Patient Info
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Patient Name: `, 20, y);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`${this.patient.name || 'N/A'}`, 55, y);
+    
+    y += lineHeight;
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Age/Gender: `, 20, y);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`${this.patient.age || 0} / ${this.patient.gender || 'N/A'}`, 50, y);
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Date: `, 120, y);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`${this.patient.date ? new Date(this.patient.date).toLocaleDateString() : 'N/A'}`, 140, y);
+    
+    y += lineHeight + 5;
+    doc.line(20, y, 190, y);
+    y += 10;
+
+    // Chief Complaints
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Chief Complaints & History:', 20, y);
+    y += lineHeight;
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    const complaintsLines = doc.splitTextToSize(this.chiefComplaints || 'N/A', 170);
+    complaintsLines.forEach((line: string) => {
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.text(line, 20, y);
+      y += lineHeight;
     });
-    doc.text('Advice & Follow-Up:', 20, y + 10);
-    doc.text(this.advice || 'N/A', 20, y + 20);
-    doc.text(`Doctor: ${this.doctor.name || 'N/A'}`, 150, y + 40, { align: 'right' });
-    doc.text('Bellandur, Bengaluru - 560103 | +91 8888666623 | swasthatech@gmail.com', 105, 280, { align: 'center' });
-    doc.save('prescription.pdf');
+
+    y += 5;
+
+    // Past History
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Past History:', 20, y);
+    y += lineHeight;
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    const historyLines = doc.splitTextToSize(this.pastHistory || 'N/A', 170);
+    historyLines.forEach((line: string) => {
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.text(line, 20, y);
+      y += lineHeight;
+    });
+
+    y += 5;
+
+    // Examination
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Examination:', 20, y);
+    y += lineHeight;
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    const examLines = doc.splitTextToSize(this.examination || 'N/A', 170);
+    examLines.forEach((line: string) => {
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.text(line, 20, y);
+      y += lineHeight;
+    });
+
+    y += 10;
+
+    // Medicines Table
+    if (y > 200) {
+      doc.addPage();
+      y = 20;
+    }
+
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Medicines Prescribed:', 20, y);
+    y += lineHeight + 3;
+
+    doc.setFontSize(8);
+    doc.text('No.', 22, y);
+    doc.text('Medicine Name', 32, y);
+    doc.text('Morning', 90, y);
+    doc.text('Afternoon', 120, y);
+    doc.text('Night', 150, y);
+    doc.text('Days', 175, y);
+    
+    y += 2;
+    doc.line(20, y, 190, y);
+    y += 5;
+
+    doc.setFont('helvetica', 'normal');
+    this.medicines.forEach((med, index) => {
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.text(`${index + 1}`, 22, y);
+      const medName = doc.splitTextToSize(med.name || 'N/A', 55);
+      doc.text(medName, 32, y);
+      
+      doc.text(`${med.morningBefore}-${med.morningAfter}`, 95, y);
+      doc.text(`${med.afternoonBefore}-${med.afternoonAfter}`, 125, y);
+      doc.text(`${med.nightBefore}-${med.nightAfter}`, 155, y);
+      doc.text(`${med.days}`, 177, y);
+      
+      y += lineHeight * Math.max(1, medName.length);
+    });
+
+    y += 5;
+    doc.line(20, y, 190, y);
+    y += 10;
+
+    // Advice
+    if (y > 250) {
+      doc.addPage();
+      y = 20;
+    }
+
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Advice & Follow-Up:', 20, y);
+    y += lineHeight;
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    const adviceLines = doc.splitTextToSize(this.advice || 'N/A', 170);
+    adviceLines.forEach((line: string) => {
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.text(line, 20, y);
+      y += lineHeight;
+    });
+
+    // Footer - Doctor Signature
+    y = 260;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Dr. ${this.doctor.name || 'N/A'}`, 150, y, { align: 'right' });
+    y += lineHeight;
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`${this.doctor.info || 'N/A'}`, 150, y, { align: 'right' });
+
+    // Footer - Hospital Info
+    y = 280;
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text('SwasthaTech Hospital', 105, y, { align: 'center' });
+    y += 5;
+    doc.setFontSize(8);
+    doc.text('Bellandur, Bengaluru - 560103 | +91 8888666623 | swasthatech@gmail.com', 105, y, { align: 'center' });
+
+    doc.save(`prescription_${this.appointmentId}.pdf`);
   }
 }

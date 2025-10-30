@@ -24,7 +24,8 @@ export class DoctorDashboardComponent implements OnInit {
   rejectionReason: string = '';
   customRejectionReason: string = '';
   showCustomReason: boolean = false;
-  selectedAppointmentId: number | null = null
+  selectedAppointmentId: number | null = null;
+  prescriptionMode: 'create' | 'view' = 'create';
 
   // Predefined rejection reasons
   rejectionReasons: string[] = [
@@ -228,6 +229,18 @@ export class DoctorDashboardComponent implements OnInit {
     }
   }
 
+  // Return bootstrap badge class for appointment statuses used in template
+  getStatusBadgeClass(status: string): string {
+    switch (status) {
+      case 'Completed': return 'bg-success';
+      case 'Confirmed': return 'bg-primary';
+      case 'Pending': return 'bg-warning text-dark';
+      case 'Rejected': return 'bg-danger';
+      case 'Cancelled': return 'bg-secondary';
+      default: return 'bg-secondary';
+    }
+  }
+  
   openCompleteModal(appointment: AppointmentResponseDto): void {
     this.selectedCompletionAppointment = appointment;
     this.completionData = {
@@ -259,72 +272,76 @@ export class DoctorDashboardComponent implements OnInit {
 
   openPrescriptionForm(appointment: AppointmentResponseDto): void {
   if (!appointment || !appointment.appointmentId || !this.doctorId) {
-    console.error('Invalid appointment or doctor data:', { appointment, doctorId: this.doctorId });
-    this.errorMessage = 'Cannot open prescription form: Invalid appointment or doctor data.';
+    console.error('Invalid appointment or doctor data');
+    this.errorMessage = 'Cannot open prescription form: Invalid data.';
     return;
   }
 
   this.selectedPrescriptionAppointmentId = appointment.appointmentId;
   this.showPrescriptionForm = true;
+  this.prescriptionMode = 'create'; // Set mode for new prescription
+  
   this.patientData = {
     name: appointment.patientName || 'N/A',
     age: 0,
     date: appointment.appointmentDate ? new Date(appointment.appointmentDate) : null
   };
 
+  // Fetch complete patient data
   this.http.get(`https://localhost:7090/api/Appointments/patient-data`, {
-  params: {
-    appointmentId: appointment.appointmentId.toString(),
-    doctorId: this.doctorId.toString(),  // Changed from userId
-    userRole: 'Doctor'
-  }
-}).subscribe({
+    params: {
+      appointmentId: appointment.appointmentId.toString(),
+      doctorId: this.doctorId.toString(),
+      userRole: 'Doctor'
+    }
+  }).subscribe({
     next: (data: any) => {
-      console.log('Patient data response:', data);
       this.patientData = {
         name: data.fullName || appointment.patientName || 'N/A',
-        age: data.age || 0,  // ✅ Fixed: lowercase 'age'
-        date: data.appointmentDate ? new Date(data.appointmentDate) : (appointment.appointmentDate ? new Date(appointment.appointmentDate) : null)
+        age: data.age || 0,
+        date: data.appointmentDate ? new Date(data.appointmentDate) : null
       };
-      console.log('Updated patientData:', this.patientData);
     },
     error: (err) => {
       console.error('Error fetching patient details:', err);
-      this.errorMessage = 'Failed to load patient data. Using available data.';
-      this.patientData = {
-        name: appointment.patientName || 'N/A',
-        age: 0,
-        date: appointment.appointmentDate ? new Date(appointment.appointmentDate) : null
-      };
-      console.log('Fallback patientData:', this.patientData);
     }
   });
 }
 
-  savePrescription(data: any) {
-    const payload = {
-      AppointmentId: data.AppointmentId,
-      ChiefComplaints: data.ChiefComplaints,
-      PastHistory: data.PastHistory,
-      Examination: data.Examination,
-      Medicines: data.Medicines,
-      Advice: data.Advice,
-      Diagnosis: data.Diagnosis || ''
-    };
-    this.http.post(`https://localhost:7090/api/Appointments/save-prescription`, payload).subscribe({
-      next: () => {
-        this.successMessage = 'Prescription saved successfully!';
-        this.showPrescriptionForm = false;
-        this.selectedPrescriptionAppointmentId = null;
-        this.loadAllAppointments();
-        setTimeout(() => this.successMessage = '', 3000);
-      },
-      error: (error) => {
-        console.error('Error saving prescription:', error);
-        this.errorMessage = 'Failed to save prescription.';
-      }
-    });
+// Add new method to view prescription:
+viewPrescription(appointment: AppointmentResponseDto): void {
+  if (!appointment || !appointment.appointmentId) {
+    this.errorMessage = 'Invalid appointment data.';
+    return;
   }
+
+  this.selectedPrescriptionAppointmentId = appointment.appointmentId;
+  this.showPrescriptionForm = true;
+  this.prescriptionMode = 'view'; // Set mode for viewing
+  
+  this.patientData = {
+    name: appointment.patientName || 'N/A',
+    age: 0,
+    date: appointment.appointmentDate ? new Date(appointment.appointmentDate) : null
+  };
+}
+
+  savePrescription(data: any) {
+  if (!data.success) {
+    this.errorMessage = data.message || 'Failed to save prescription';
+    return;
+  }
+
+  this.successMessage = data.message || 'Prescription saved and appointment completed successfully!';
+  this.showPrescriptionForm = false;
+  this.selectedPrescriptionAppointmentId = null;
+  this.prescriptionMode = 'create';
+  
+  // Reload all appointments to reflect changes
+  this.loadAllAppointments();
+  
+  setTimeout(() => this.successMessage = '', 5000);
+}
 
   cancelPrescription() {
     this.showPrescriptionForm = false;
