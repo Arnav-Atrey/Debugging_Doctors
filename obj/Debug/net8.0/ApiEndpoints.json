@@ -671,6 +671,32 @@
     ]
   },
   {
+    "ContainingType": "MedicinesController",
+    "Method": "GetBySpecialization",
+    "RelativePath": "api/Medicines/specialization/{specialization}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "specialization",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[Hospital_Management_system.Models.Medicine, Hospital_Management_system, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
     "ContainingType": "Hospital_Management_system.Controllers.PatientsController",
     "Method": "GetPatients",
     "RelativePath": "api/Patients",

@@ -1,5 +1,5 @@
 {
-  "openapi": "3.0.1",
+  "openapi": "3.0.4",
   "info": {
     "title": "Hospital_Management_system",
     "version": "1.0"
@@ -1182,6 +1182,54 @@
         }
       }
     },
+    "/api/Medicines/specialization/{specialization}": {
+      "get": {
+        "tags": [
+          "Medicines"
+        ],
+        "parameters": [
+          {
+            "name": "specialization",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Medicine"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Medicine"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Medicine"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Patients": {
       "get": {
         "tags": [
@@ -2337,6 +2385,37 @@
             "nullable": true
           },
           "contactNo": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Medicine": {
+        "required": [
+          "name",
+          "pricePerTablet",
+          "specialization"
+        ],
+        "type": "object",
+        "properties": {
+          "medicineID": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "specialization": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "pricePerTablet": {
+            "type": "number",
+            "format": "double"
+          },
+          "genericName": {
             "type": "string",
             "nullable": true
           }

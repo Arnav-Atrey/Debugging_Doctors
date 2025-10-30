@@ -55,11 +55,11 @@
               </p>
               <div class="d-flex gap-2">
                 <button class="btn btn-success btn-sm" (click)="confirmAppointment(appointment.appointmentId)">
-                  <i class="bi bi-check-circle me-1"></i>Accept
+                  Accept
                 </button>
                 <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal" 
                         (click)="openRejectModal(appointment.appointmentId)">
-                  <i class="bi bi-x-circle me-1"></i>Reject
+                  Reject
                 </button>
               </div>
             </div>
@@ -86,10 +86,10 @@
               <div class="d-flex gap-2">
                 <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#completeModal"
                         (click)="openCompleteModal(appointment)">
-                  <i class="bi bi-check2-square me-1"></i>Mark as Completed
+                  Mark as Completed
                 </button>
                 <button class="btn btn-outline-secondary btn-sm" (click)="openPrescriptionForm(appointment)">
-                  <i class="bi bi-file-earmark-medical me-1"></i>Complete with Prescription
+                  Complete with Prescription
                 </button>
               </div>
             </div>
@@ -122,7 +122,7 @@
               <ng-container *ngIf="appointment.invoiceStatus === 'Pending'">
                 <button *ngIf="appointment.invoiceAmount" class="btn btn-success btn-sm"
                         (click)="markAsPaid(appointment.appointmentId)">
-                  <i class="bi bi-cash me-1"></i>Mark as Paid
+                  Mark as Paid
                 </button>
                 <span *ngIf="!appointment.invoiceAmount" class="badge bg-danger">Cancelled</span>
               </ng-container>
@@ -132,8 +132,9 @@
       </div>
     </div>
 
-    <!-- Prescription Module -->
-    <div class="mt-4" *ngIf="showPrescriptionForm" data-debug="prescription-form">
+    <!-- Prescription Form -->
+    <div class="mt-4 p-4 border rounded bg-white shadow-sm" *ngIf="showPrescriptionForm" data-debug="prescription-form">
+      <h5 class="mb-3 text-primary">Prescribe Medicine</h5>
       <app-prescription
         [appointmentId]="selectedPrescriptionAppointmentId!"
         [doctorId]="doctorId"
@@ -146,6 +147,69 @@
         [attr.data-doctor-name]="doctorData.name"
         [attr.data-doctor-info]="doctorData.info">
       </app-prescription>
+    </div>
+
+    <!-- Invoice Display -->
+    <div *ngIf="invoiceData" class="mt-5 p-4 border rounded bg-light shadow-sm">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="text-primary mb-0">Invoice Generated</h4>
+        <button class="btn btn-outline-secondary btn-sm" (click)="invoiceData = null">
+          Close
+        </button>
+      </div>
+
+      <div class="row small">
+        <div class="col-md-6">
+          <p><strong>Patient:</strong> {{ invoiceData.patient.name }}</p>
+          <p><strong>Age:</strong> {{ invoiceData.patient.age }}</p>
+          <p><strong>Date:</strong> {{ invoiceData.date }}</p>
+        </div>
+        <div class="col-md-6 text-end">
+          <p><strong>Doctor:</strong> {{ invoiceData.doctor.name }}</p>
+          <p><strong>Specialization:</strong> {{ invoiceData.doctor.info }}</p>
+        </div>
+      </div>
+
+      <hr>
+
+      <h6>Medicines Prescribed:</h6>
+      <ul class="list-group list-group-flush mb-3">
+        <li *ngFor="let med of invoiceData.medicines" class="list-group-item small py-1">
+          {{ med.Name }} - {{ med.Days }} days
+          <span class="text-muted">
+            ({{ med.MorningBefore }}+{{ med.MorningAfter }} | {{ med.AfternoonBefore }}+{{ med.AfternoonAfter }} | {{ med.NightBefore }}+{{ med.NightAfter }})
+          </span>
+        </li>
+      </ul>
+
+      <div class="border p-3 bg-white rounded">
+        <table class="table table-sm table-borderless mb-0">
+          <tbody>
+            <tr>
+              <td><strong>Consultation Fee</strong></td>
+              <td class="text-end">{{ invoiceData.bill.currency }}{{ invoiceData.bill.consultationFee.toFixed(2) }}</td>
+            </tr>
+            <tr>
+              <td><strong>Medicine Cost</strong></td>
+              <td class="text-end">{{ invoiceData.bill.currency }}{{ invoiceData.bill.medicineCost.toFixed(2) }}</td>
+            </tr>
+            <tr>
+              <td><strong>GST (5%)</strong></td>
+              <td class="text-end">{{ invoiceData.bill.currency }}{{ invoiceData.bill.gst.toFixed(2) }}</td>
+            </tr>
+            <tr class="fw-bold text-primary">
+              <td><strong>Total Amount</strong></td>
+              <td class="text-end">{{ invoiceData.bill.currency }}{{ invoiceData.bill.total.toFixed(2) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mt-3 text-center">
+        <button class="btn btn-success btn-sm" (click)="printInvoice()">
+          Print Invoice
+        </button>
+      </div>
     </div>
 
   </div>

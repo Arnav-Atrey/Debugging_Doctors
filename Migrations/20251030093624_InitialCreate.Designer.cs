@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Hospital_Management_system.Migrations
 {
     [DbContext(typeof(DebuggingDoctorsContext))]
-    [Migration("20251019090026_AddPrescriptionsTable")]
-    partial class AddPrescriptionsTable
+    [Migration("20251030093624_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,7 +25,7 @@ namespace Hospital_Management_system.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Hospital_Management_system.Models.Appointment", b =>
+            modelBuilder.Entity("Appointment", b =>
                 {
                     b.Property<int>("AppointmentId")
                         .ValueGeneratedOnAdd()
@@ -59,6 +59,11 @@ namespace Hospital_Management_system.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)")
                         .HasColumnName("Invoice_Status");
+
+                    b.Property<bool>("IsApproved")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("Medicines")
                         .HasColumnType("nvarchar(max)");
@@ -103,8 +108,8 @@ namespace Hospital_Management_system.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("HPID")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasMaxLength(14)
+                        .HasColumnType("nvarchar(14)");
 
                     b.Property<string>("Specialisation")
                         .HasMaxLength(100)
@@ -122,6 +127,105 @@ namespace Hospital_Management_system.Migrations
                     b.ToTable("Doctors");
                 });
 
+            modelBuilder.Entity("Hospital_Management_system.Models.Medicine", b =>
+                {
+                    b.Property<int>("MedicineID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MedicineID"));
+
+                    b.Property<string>("GenericName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("PricePerTablet")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<string>("Specialization")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("MedicineID");
+
+                    b.ToTable("Medicines");
+
+                    b.HasData(
+                        new
+                        {
+                            MedicineID = 1,
+                            Name = "Paracetamol 500mg",
+                            PricePerTablet = 2.00m,
+                            Specialization = "General"
+                        },
+                        new
+                        {
+                            MedicineID = 2,
+                            Name = "Amoxicillin 500mg",
+                            PricePerTablet = 10.00m,
+                            Specialization = "General"
+                        },
+                        new
+                        {
+                            MedicineID = 3,
+                            Name = "Cetirizine 10mg",
+                            PricePerTablet = 3.50m,
+                            Specialization = "General"
+                        },
+                        new
+                        {
+                            MedicineID = 4,
+                            Name = "Metformin 500mg",
+                            PricePerTablet = 4.00m,
+                            Specialization = "General"
+                        },
+                        new
+                        {
+                            MedicineID = 5,
+                            Name = "Amlodipine 5mg",
+                            PricePerTablet = 5.00m,
+                            Specialization = "Cardiology"
+                        },
+                        new
+                        {
+                            MedicineID = 6,
+                            Name = "Atorvastatin 20mg",
+                            PricePerTablet = 8.00m,
+                            Specialization = "Cardiology"
+                        },
+                        new
+                        {
+                            MedicineID = 7,
+                            Name = "Clopidogrel 75mg",
+                            PricePerTablet = 12.00m,
+                            Specialization = "Cardiology"
+                        },
+                        new
+                        {
+                            MedicineID = 8,
+                            Name = "Sertraline 50mg",
+                            PricePerTablet = 15.00m,
+                            Specialization = "Psychiatry"
+                        },
+                        new
+                        {
+                            MedicineID = 9,
+                            Name = "Escitalopram 10mg",
+                            PricePerTablet = 18.00m,
+                            Specialization = "Psychiatry"
+                        },
+                        new
+                        {
+                            MedicineID = 10,
+                            Name = "Alprazolam 0.5mg",
+                            PricePerTablet = 7.00m,
+                            Specialization = "Psychiatry"
+                        });
+                });
+
             modelBuilder.Entity("Hospital_Management_system.Models.Patient", b =>
                 {
                     b.Property<int>("PatientId")
@@ -132,7 +236,8 @@ namespace Hospital_Management_system.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PatientId"));
 
                     b.Property<string>("Aadhaar_no")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(12)
+                        .HasColumnType("nvarchar(12)");
 
                     b.Property<string>("Address")
                         .HasMaxLength(255)
@@ -171,7 +276,8 @@ namespace Hospital_Management_system.Migrations
                 {
                     b.Property<int>("PrescriptionID")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("PrescriptionID");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PrescriptionID"));
 
@@ -180,14 +286,17 @@ namespace Hospital_Management_system.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("AppointmentID")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("AppointmentID");
 
                     b.Property<string>("ChiefComplaints")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime")
+                        .HasDefaultValueSql("(getdate())");
 
                     b.Property<string>("Diagnosis")
                         .IsRequired()
@@ -206,7 +315,9 @@ namespace Hospital_Management_system.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime")
+                        .HasDefaultValueSql("(getdate())");
 
                     b.HasKey("PrescriptionID");
 
@@ -254,7 +365,7 @@ namespace Hospital_Management_system.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Hospital_Management_system.Models.Appointment", b =>
+            modelBuilder.Entity("Appointment", b =>
                 {
                     b.HasOne("Hospital_Management_system.Models.Doctor", "Doctor")
                         .WithMany("Appointments")
@@ -299,7 +410,7 @@ namespace Hospital_Management_system.Migrations
 
             modelBuilder.Entity("Hospital_Management_system.Models.Prescription", b =>
                 {
-                    b.HasOne("Hospital_Management_system.Models.Appointment", "Appointment")
+                    b.HasOne("Appointment", "Appointment")
                         .WithOne("Prescription")
                         .HasForeignKey("Hospital_Management_system.Models.Prescription", "AppointmentID")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -308,7 +419,7 @@ namespace Hospital_Management_system.Migrations
                     b.Navigation("Appointment");
                 });
 
-            modelBuilder.Entity("Hospital_Management_system.Models.Appointment", b =>
+            modelBuilder.Entity("Appointment", b =>
                 {
                     b.Navigation("Prescription")
                         .IsRequired();

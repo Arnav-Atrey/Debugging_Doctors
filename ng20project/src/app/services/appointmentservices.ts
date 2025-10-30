@@ -65,8 +65,9 @@ export class AppointmentService {
     return this.http.post<AppointmentResponseDto>(`${this.apiUrl}/api/Appointments/book`, bookingData);
   }
 
-  confirmAppointment(appointmentId: number): Observable<void> {
-    return this.http.put<void>(`${this.apiUrl}/api/Appointments/${appointmentId}/confirm`, {});
+  confirmAppointment(appointmentId: number):Observable<any> {
+    console.log(`${this.apiUrl}/api/Appointments/${appointmentId}/confirm`)
+    return this.http.put(`${this.apiUrl}/api/Appointments/${appointmentId}/confirm`, {});
   }
 
   rejectAppointment(appointmentId: number, reason: string): Observable<void> {

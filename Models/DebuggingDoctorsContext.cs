@@ -23,6 +23,8 @@ public partial class DebuggingDoctorsContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
+    public virtual DbSet<Medicine> Medicines { get; set; }
+
     public DbSet<Prescription> Prescriptions { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -113,6 +115,24 @@ public partial class DebuggingDoctorsContext : DbContext
             entity.Property(e => e.PswdHash).HasMaxLength(255);
             entity.Property(e => e.Role).HasMaxLength(20);
         });
+
+        modelBuilder.Entity<Medicine>().HasData(
+        // General Medicine
+        new Medicine { MedicineID = 1, Name = "Paracetamol 500mg", Specialization = "General", PricePerTablet = 2.00m },
+        new Medicine { MedicineID = 2, Name = "Amoxicillin 500mg", Specialization = "General", PricePerTablet = 10.00m },
+        new Medicine { MedicineID = 3, Name = "Cetirizine 10mg", Specialization = "General", PricePerTablet = 3.50m },
+        new Medicine { MedicineID = 4, Name = "Metformin 500mg", Specialization = "General", PricePerTablet = 4.00m },
+
+        // Cardiology
+        new Medicine { MedicineID = 5, Name = "Amlodipine 5mg", Specialization = "Cardiology", PricePerTablet = 5.00m },
+        new Medicine { MedicineID = 6, Name = "Atorvastatin 20mg", Specialization = "Cardiology", PricePerTablet = 8.00m },
+        new Medicine { MedicineID = 7, Name = "Clopidogrel 75mg", Specialization = "Cardiology", PricePerTablet = 12.00m },
+
+        // Psychiatry
+        new Medicine { MedicineID = 8, Name = "Sertraline 50mg", Specialization = "Psychiatry", PricePerTablet = 15.00m },
+        new Medicine { MedicineID = 9, Name = "Escitalopram 10mg", Specialization = "Psychiatry", PricePerTablet = 18.00m },
+        new Medicine { MedicineID = 10, Name = "Alprazolam 0.5mg", Specialization = "Psychiatry", PricePerTablet = 7.00m }
+    );
 
         // Configure Prescription
         modelBuilder.Entity<Prescription>(entity =>

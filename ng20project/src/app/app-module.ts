@@ -18,6 +18,7 @@ import { DoctorDashboardComponent } from './doctor/dashboard/dashboard';
 import { NavbarComponent } from './shared/navbar/navbar';
 import { PatientProfileComponent } from './patient/profile/profile';
 import { DoctorProfileComponent } from './doctor/profile/profile';
+import { MedicineService } from './services/medicineservices';
 
 @NgModule({
   declarations: [
@@ -44,7 +45,8 @@ import { DoctorProfileComponent } from './doctor/profile/profile';
   ],
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideHttpClient()
+    provideHttpClient(),
+    MedicineService
   ],
   bootstrap: [App]
 })

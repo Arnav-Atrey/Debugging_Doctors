@@ -4,10 +4,21 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import jsPDF from 'jspdf';
 import autoTable, { RowInput } from 'jspdf-autotable';
+import { MedicineService } from '../services/medicineservices';
 
+// DTO for available medicines from backend
+interface MedicineDto {
+  medicineID: number;
+  name: string;
+  pricePerTablet: number;
+}
+
+// Updated Medicine interface with price and ID
 interface Medicine {
   slNo: number;
+  medicineID: number;
   name: string;
+  pricePerTablet: number;
   morningBefore: number;
   morningAfter: number;
   afternoonBefore: number;
@@ -39,13 +50,23 @@ export class PrescriptionComponent implements OnInit {
   advice = '';
   medicines: Medicine[] = [];
 
-  constructor(private http: HttpClient) {}
+  // New properties
+  availableMedicines: MedicineDto[] = [];
+  bill = {
+    consultationFee: 500, // Default consultation fee (can be dynamic later)
+    medicineCost: 0,
+    gst: 0,
+    total: 0,
+    currency: '₹'
+  };
+
+  constructor(private http: HttpClient,private medicineService: MedicineService) {}
 
   ngOnInit(): void {
     if (this.appointmentId) {
       this.loadPrescription();
       this.fetchPatientData();
-      this.fetchDoctorData();
+      this.fetchDoctorData().then(() => this.loadAvailableMedicines());
     } else {
       console.error('Appointment ID is undefined');
       this.patient = {
@@ -96,23 +117,50 @@ export class PrescriptionComponent implements OnInit {
     });
   }
 
-  fetchDoctorData() {
-    if (!this.doctorId) {
-      console.error('Cannot fetch doctor data: doctorId is undefined');
-      return;
-    }
+  fetchDoctorData(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (!this.doctorId) {
+        console.error('Cannot fetch doctor data: doctorId is undefined');
+        this.doctor = { name: 'N/A', info: 'N/A' };
+        resolve();
+        return;
+      }
 
-    this.http.get(`https://localhost:7090/api/Doctors/${this.doctorId}`).subscribe({
-      next: (data: any) => {
-        console.log('Doctor data response:', data);
-        this.doctor = {
-          name: data.fullName || data.FullName || 'N/A',
-          info: data.specialisation || data.Specialisation || 'N/A'
-        };
+      this.http.get(`https://localhost:7090/api/Doctors/${this.doctorId}`).subscribe({
+        next: (data: any) => {
+          console.log('Doctor data response:', data);
+          this.doctor = {
+            name: data.fullName || data.FullName || 'N/A',
+            info: data.specialisation || data.Specialisation || 'General'
+          };
+          resolve();
+        },
+        error: (err) => {
+          console.error('Error fetching doctor data:', err);
+          this.doctor = { name: 'N/A', info: 'General' };
+          resolve();
+        }
+      });
+    });
+  }
+
+  private loadAvailableMedicines(): void {
+    let spec = this.doctor.info || 'General';
+    if (spec === 'General Medicine') {
+    spec = 'General';
+  }
+    this.http.get<MedicineDto[]>(`https://localhost:7090/api/Medicines/specialization/${spec}`).subscribe({
+      next: (meds) => {
+        this.availableMedicines = meds;
+        if (!this.medicines.length || this.medicines.every(m => m.medicineID === 0)) {
+          this.medicines = [];
+          this.addMedicine();
+        }
+        this.calculateBill();
       },
       error: (err) => {
-        console.error('Error fetching doctor data:', err);
-        this.doctor = { name: 'N/A', info: 'N/A' };
+        console.error('Error loading available medicines:', err);
+        this.availableMedicines = [];
       }
     });
   }
@@ -134,7 +182,9 @@ export class PrescriptionComponent implements OnInit {
         this.medicines = prescription.Medicines && prescription.Medicines.length
           ? prescription.Medicines.map((m: any, i: number) => ({
               slNo: m.SlNo || i + 1,
+              medicineID: m.MedicineID || 0,
               name: m.Name || '',
+              pricePerTablet: m.PricePerTablet || 0,
               morningBefore: m.MorningBefore || 0,
               morningAfter: m.MorningAfter || 0,
               afternoonBefore: m.AfternoonBefore || 0,
@@ -143,9 +193,15 @@ export class PrescriptionComponent implements OnInit {
               nightAfter: m.NightAfter || 0,
               days: m.Days || 0
             }))
-          : [this.createEmptyMedicine()];
+          : [];
+
+        // Load bill if exists
+        if (prescription.Bill) {
+          this.bill = { ...this.bill, ...prescription.Bill };
+        }
 
         this.isEditMode = false;
+        this.calculateBill();
       },
       error: (err) => {
         console.warn('No prescription found for this appointment:', err);
@@ -153,16 +209,22 @@ export class PrescriptionComponent implements OnInit {
         this.pastHistory = '';
         this.examination = '';
         this.advice = '';
-        this.medicines = [this.createEmptyMedicine()];
+        this.medicines = [];
         this.isEditMode = true;
+        if (this.availableMedicines.length > 0) {
+          this.addMedicine();
+        }
       }
     });
   }
 
-  createEmptyMedicine(): Medicine {
-    return {
+  addMedicine(): void {
+    const first = this.availableMedicines[0];
+    this.medicines.push({
       slNo: this.medicines.length + 1,
-      name: '',
+      medicineID: first?.medicineID || 0,
+      name: first?.name || '',
+      pricePerTablet: first?.pricePerTablet || 0,
       morningBefore: 0,
       morningAfter: 0,
       afternoonBefore: 0,
@@ -170,27 +232,66 @@ export class PrescriptionComponent implements OnInit {
       nightBefore: 0,
       nightAfter: 0,
       days: 0
-    };
-  }
-
-  addMedicine() {
-    this.medicines.push(this.createEmptyMedicine());
+    });
+    this.calculateBill();
   }
 
   removeMedicine(index: number) {
     this.medicines.splice(index, 1);
     this.medicines.forEach((med, i) => (med.slNo = i + 1));
+    this.calculateBill();
+  }
+
+  onMedicineChange(med: Medicine, event: any): void {
+    console.log('Medicine change event:', event, typeof event.target.value, typeof event);
+    //debugger;
+    const selectedId = event.target.value;
+    console.log('Selected Medicine ID:', selectedId,selectedId.substr(2,3));
+    const selected = this.availableMedicines.find(m => m.medicineID == selectedId.substr(2,selectedId.length));
+    console.log('Selected Medicine Object:', selected);
+     console.log(this.availableMedicines);
+    if (selected) {
+      med.medicineID = selected.medicineID;
+      med.name = selected.name;
+      console.log(med.name);
+         console.log(selected?.name);
+      med.pricePerTablet = selected.pricePerTablet;
+      this.calculateBill();
+    }
+  }
+
+  calculateBill(): void {
+    // 1. Medicine Cost
+    this.bill.medicineCost = this.medicines.reduce((sum, m) => {
+      const daily = m.morningBefore + m.morningAfter +
+                    m.afternoonBefore + m.afternoonAfter +
+                    m.nightBefore + m.nightAfter;
+      return sum + (daily * m.days * m.pricePerTablet);
+    }, 0);
+
+    // 2. Subtotal
+    const subtotal = this.bill.consultationFee + this.bill.medicineCost;
+
+    // 3. GST 5%
+    this.bill.gst = +(subtotal * 0.05).toFixed(2);
+
+    // 4. Total
+    this.bill.total = +(subtotal + this.bill.gst).toFixed(2);
   }
 
   savePrescription() {
+    this.calculateBill();
     this.isEditMode = false;
-    this.save.emit({
+
+    const payload = {
       AppointmentId: this.appointmentId,
       ChiefComplaints: this.chiefComplaints,
       PastHistory: this.pastHistory,
       Examination: this.examination,
-      Medicines: this.medicines.map((m) => ({
-        SlNo: m.slNo,
+      Advice: this.advice,
+      Diagnosis: '',
+      Medicines: this.medicines.map(m => ({
+        MedicineID: m.medicineID,
         Name: m.name,
         MorningBefore: m.morningBefore,
         MorningAfter: m.morningAfter,
@@ -198,11 +299,13 @@ export class PrescriptionComponent implements OnInit {
         AfternoonAfter: m.afternoonAfter,
         NightBefore: m.nightBefore,
         NightAfter: m.nightAfter,
-        Days: m.days
+        Days: m.days,
+        PricePerTablet: m.pricePerTablet
       })),
-      Advice: this.advice,
-      Diagnosis: ''
-    });
+      Bill: { ...this.bill }
+    };
+
+    this.save.emit(payload);
   }
 
   cancelEdit() {
@@ -217,6 +320,13 @@ export class PrescriptionComponent implements OnInit {
     img.src = logoUrl;
 
     img.onload = () => {
+      const formatRupees = (amount: number): string => {
+      // ₹ is a Unicode character (U+20B9) – jsPDF works with UTF-8 by default
+      return `₹${amount.toLocaleString('en-IN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`;
+    };
       // === HEADER ===
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(18);
@@ -338,7 +448,7 @@ export class PrescriptionComponent implements OnInit {
           }
         });
 
-        y = (doc as any).lastAutoTable.finalY + 20; // Increased gap
+        y = (doc as any).lastAutoTable.finalY + 20;
       }
 
       // === ADVICE & FOLLOW-UP ===
@@ -347,26 +457,49 @@ export class PrescriptionComponent implements OnInit {
       doc.setFont('helvetica', 'normal');
       const adviceLines = doc.splitTextToSize(this.advice || 'N/A', 180);
       doc.text(adviceLines, 15, y + 6);
+      y += adviceLines.length * 6 + 15;
+
+      // === BILL SECTION ===
+      doc.setFont('Arial', 'bold');
+      doc.text('Bill Summary:', 15, y);
+      y += 8;
+
+      const billBody: RowInput[] = [
+      ['Consultation Fee', formatRupees(this.bill.consultationFee)],
+      ['Medicine Cost',    formatRupees(this.bill.medicineCost)],
+      ['Subtotal',         formatRupees(this.bill.consultationFee + this.bill.medicineCost)],
+      ['GST (5%)',         formatRupees(this.bill.gst)],
+      ['Total Amount',     formatRupees(this.bill.total)],
+    ];
+
+      autoTable(doc, {
+      startY: y,
+      body: billBody,
+      theme: 'striped',
+      styles: { fontSize: 11 },
+      columnStyles: {
+        0: { fontStyle: 'bold', cellWidth: 60 },
+        1: { halign: 'right' },
+      },
+    });
+
+      y = (doc as any).lastAutoTable.finalY + 20;
 
       // === FOOTER ===
       const footerY = 270;
 
-      // Doctor info above line
       doc.setFont('helvetica', 'bold');
       doc.text(this.doctor.name || 'N/A', 105, footerY - 8, { align: 'center' });
       doc.setFont('helvetica', 'normal');
       doc.text(this.doctor.info || 'N/A', 105, footerY - 2, { align: 'center' });
 
-      // Horizontal line
       doc.setLineWidth(0.5);
       doc.line(15, footerY, 195, footerY);
 
-      // Hospital name below line
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(12);
       doc.text('SwasthaTech Hospital', 105, footerY + 8, { align: 'center' });
 
-      // Contact info
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(10);
       doc.text(
@@ -376,9 +509,9 @@ export class PrescriptionComponent implements OnInit {
         { align: 'center' }
       );
 
-      // === SAVE PDF (patient name as filename) ===
-      const patientName = this.patient.name || 'prescription';
-      doc.save(`${patientName}.pdf`);
+      // === SAVE PDF ===
+      const patientName = (this.patient.name || 'prescription').replace(/\s+/g, '_');
+      doc.save(`${patientName}_Prescription.pdf`);
     };
   }
 }

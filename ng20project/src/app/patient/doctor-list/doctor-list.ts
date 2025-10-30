@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { DoctorService, Doctor } from '../../services/doctorservices';
 import { FormsModule } from '@angular/forms';
 
@@ -9,7 +9,7 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './doctor-list.html',
   styleUrls: ['./doctor-list.css'],
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule]
+  imports: [CommonModule,  FormsModule]
 })
 export class DoctorListComponent implements OnInit {
   doctors: Doctor[] = [];
