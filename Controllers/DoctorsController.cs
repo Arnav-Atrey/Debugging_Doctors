@@ -192,13 +192,14 @@ namespace Hospital_Management_system.Controllers
         }
 
         // DELETE: api/Doctors/5/permanent (Admin only - Hard Delete)
+        // SQL-based approach for guaranteed deletion
         [HttpDelete("{id}/permanent")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> PermanentDeleteDoctor(int id)
         {
             try
             {
-                // Find doctor with query filters ignored to get soft-deleted records
+                // Find doctor with query filters ignored
                 var doctor = await _context.Doctors
                     .IgnoreQueryFilters()
                     .FirstOrDefaultAsync(d => d.DocId == id);
@@ -208,65 +209,80 @@ namespace Hospital_Management_system.Controllers
                     return NotFound(new { message = "Doctor not found" });
                 }
 
-                // Get ALL appointments for this doctor (including soft-deleted ones)
-                var appointments = await _context.Appointments
-                    .IgnoreQueryFilters()
-                    .Where(a => a.DoctorId == id)
-                    .ToListAsync();
+                var userId = doctor.UserId;
 
-                var deletedPrescriptionsCount = 0; // Track count separately
+                // Execute raw SQL commands in correct order
+                using var transaction = await _context.Database.BeginTransactionAsync();
 
-                if (appointments.Any())
+                try
                 {
-                    var appointmentIds = appointments.Select(a => a.AppointmentId).ToList();
-
-                    // Declare prescriptions outside the if block
-                    var prescriptions = await _context.Prescriptions
-                        .Where(p => appointmentIds.Contains(p.AppointmentID))
+                    // Get counts for response (fixed SQL queries with column aliases)
+                    var appointmentCountResult = await _context.Database
+                        .SqlQueryRaw<int>($"SELECT COUNT(*) as Value FROM Appointments WHERE DoctorID = {id}")
                         .ToListAsync();
+                    var appointmentCount = appointmentCountResult.FirstOrDefault();
 
-                    if (prescriptions.Any())
+                    var prescriptionCountResult = await _context.Database
+                        .SqlQueryRaw<int>($@"
+                    SELECT COUNT(*) as Value
+                    FROM Prescriptions p
+                    INNER JOIN Appointments a ON p.AppointmentID = a.AppointmentID
+                    WHERE a.DoctorID = {id}")
+                        .ToListAsync();
+                    var prescriptionCount = prescriptionCountResult.FirstOrDefault();
+
+                    Console.WriteLine($"Deleting doctor {id}: {appointmentCount} appointments, {prescriptionCount} prescriptions");
+
+                    // Delete in correct order using raw SQL with parameters to prevent SQL injection
+                    // 1. Delete prescriptions
+                    var deletedPrescriptions = await _context.Database.ExecuteSqlRawAsync(@"
+                DELETE FROM Prescriptions 
+                WHERE AppointmentID IN (
+                    SELECT AppointmentID FROM Appointments WHERE DoctorID = {0}
+                )", id);
+                    Console.WriteLine($"Deleted {deletedPrescriptions} prescriptions");
+
+                    // 2. Delete appointments
+                    var deletedAppointments = await _context.Database.ExecuteSqlRawAsync(@"
+                DELETE FROM Appointments WHERE DoctorID = {0}", id);
+                    Console.WriteLine($"Deleted {deletedAppointments} appointments");
+
+                    // 3. Delete doctor
+                    var deletedDoctor = await _context.Database.ExecuteSqlRawAsync(@"
+                DELETE FROM Doctors WHERE DocID = {0}", id);
+                    Console.WriteLine($"Deleted doctor: {deletedDoctor}");
+
+                    // 4. Delete user
+                    var deletedUser = await _context.Database.ExecuteSqlRawAsync(@"
+                DELETE FROM Users WHERE UserID = {0}", userId);
+                    Console.WriteLine($"Deleted user: {deletedUser}");
+
+                    await transaction.CommitAsync();
+                    Console.WriteLine("Transaction committed successfully");
+
+                    return Ok(new
                     {
-                        _context.Prescriptions.RemoveRange(prescriptions);
-                        await _context.SaveChangesAsync();
-                        deletedPrescriptionsCount = prescriptions.Count; // Capture count
-                    }
-
-                    // Delete all appointments
-                    _context.Appointments.RemoveRange(appointments);
-                    await _context.SaveChangesAsync();
+                        message = "Doctor and related records permanently deleted",
+                        deletedAppointments = appointmentCount,
+                        deletedPrescriptions = prescriptionCount
+                    });
                 }
-                else
+                catch (Exception ex)
                 {
-                    deletedPrescriptionsCount = 0;
+                    await transaction.RollbackAsync();
+                    Console.WriteLine($"Transaction rolled back: {ex.Message}");
+                    throw;
                 }
-                // Now delete the doctor
-                _context.Doctors.Remove(doctor);
-                await _context.SaveChangesAsync();
-
-                // Finally, delete the user account
-                var user = await _context.Users
-                    .IgnoreQueryFilters()
-                    .FirstOrDefaultAsync(u => u.UserId == doctor.UserId);
-
-                if (user != null)
-                {
-                    _context.Users.Remove(user);
-                    await _context.SaveChangesAsync();
-                }
-
-                return Ok(new
-                {
-                    message = "Doctor and related records permanently deleted",
-                    deletedAppointments = appointments.Count,
-                    deletedPrescriptions = deletedPrescriptionsCount
-                });
             }
             catch (Exception ex)
             {
-                // Log the full exception for debugging
                 Console.WriteLine($"Error deleting doctor: {ex.Message}");
                 Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                    Console.WriteLine($"Inner stack trace: {ex.InnerException.StackTrace}");
+                }
 
                 return StatusCode(500, new
                 {
