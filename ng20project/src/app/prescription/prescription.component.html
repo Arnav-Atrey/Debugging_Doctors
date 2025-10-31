@@ -1,211 +1,165 @@
-<div id="prescription" class="container border p-4 bg-white">
-  <!-- Loading Spinner -->
-  <div *ngIf="isLoading" class="text-center py-5">
-    <div class="spinner-border text-primary" role="status">
-      <span class="visually-hidden">Loading...</span>
+<div id="prescription" class="container border p-4 bg-white shadow-sm" data-debug="prescription-container">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <img src="https://i.postimg.cc/Jh6NpCt7/Copilot-20251007-094058.png" style="height: 48px;" alt="SwasthaTech Logo">
+    <h3 class="text-center flex-grow-1 m-0">SwasthaTech Hospital</h3>
+    <div class="text-end text-muted small">
+      <div><strong>Doctor:</strong> {{ doctor.name || 'N/A' }}</div>
+      <div>{{ doctor.info || 'N/A' }}</div>
     </div>
-    <p class="mt-2">Loading prescription...</p>
   </div>
 
-  <!-- Error Message -->
-  <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show">
-    {{ errorMessage }}
-    <button type="button" class="btn-close" (click)="errorMessage = ''" aria-label="Close"></button>
+  <hr class="my-3">
+
+  <!-- Patient Info -->
+  <div class="row mb-3 text-muted small" data-debug="patient-info">
+    <div class="col-md-4"><strong>Patient:</strong> {{ patient.name || 'N/A' }}</div>
+    <div class="col-md-4"><strong>Age:</strong> {{ patient.age || 0 }}</div>
+    <div class="col-md-4"><strong>Date:</strong> {{ patient.date ? (patient.date | date:'shortDate') : 'N/A' }}</div>
   </div>
 
-  <!-- Prescription Content -->
-  <div *ngIf="!isLoading">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <img src="https://i.postimg.cc/Jh6NpCt7/Copilot-20251007-094058.png" style="height: 48px; margin-right: 16px;" alt="SwasthaTech Logo">
-      <h3 class="text-center flex-grow-1">SwasthaTech Hospital</h3>
-      <div class="text-end">
-        <strong>Dr. {{ doctor.name || 'N/A' }}</strong><br>
-        <small>{{ doctor.info || 'N/A' }}</small><br>
-        <small>HPID: {{ doctor.hpid || 'N/A' }}</small>
-      </div>
+  <!-- Chief Complaints -->
+  <div class="mb-3">
+    <label class="form-label fw-bold">Chief Complaints & History:</label>
+    <textarea class="form-control" rows="2" [(ngModel)]="chiefComplaints" [readonly]="!isEditMode" placeholder="Enter chief complaints..."></textarea>
+  </div>
+
+  <!-- Past History -->
+  <div class="mb-3">
+    <label class="form-label fw-bold">Past History:</label>
+    <textarea class="form-control" rows="2" [(ngModel)]="pastHistory" [readonly]="!isEditMode" placeholder="Enter past history..."></textarea>
+  </div>
+
+  <!-- Examination -->
+  <div class="mb-3">
+    <label class="form-label fw-bold">Examination:</label>
+    <textarea class="form-control" rows="2" [(ngModel)]="examination" [readonly]="!isEditMode" placeholder="Enter examination details..."></textarea>
+  </div>
+
+  <!-- Medicines Table -->
+  <div class="mb-3">
+    <label class="form-label fw-bold d-block">Medicines Prescribed:</label>
+    <div class="table-responsive">
+      <table class="table table-bordered text-center align-middle" data-debug="medicines-table">
+        <thead class="table-light">
+          <tr>
+            <th rowspan="2">Sl. No</th>
+            <th rowspan="2">Medicine</th>
+            <th colspan="2">Morning</th>
+            <th colspan="2">Afternoon</th>
+            <th colspan="2">Night</th>
+            <th rowspan="2">Days</th>
+            <th rowspan="2" *ngIf="isEditMode">Action</th>
+          </tr>
+          <tr>
+            <th>B.F</th><th>A.F</th>
+            <th>B.F</th><th>A.F</th>
+            <th>B.F</th><th>A.F</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let med of medicines; let i = index" [attr.data-medicine-index]="i">
+            <!-- Sl No -->
+            <td>{{ i + 1 }}</td>
+
+            <!-- Medicine Dropdown -->
+            <td>
+              {{med.medicineID}}
+              <select class="form-control form-control-sm"
+                      [(ngModel)]="med.medicineID"
+                      (change)="onMedicineChange(med, $event)"
+                      [disabled]="!isEditMode">
+                <option>-- Select Medicine --</option>
+                <option *ngFor="let m of availableMedicines" [ngValue]="m.medicineID">
+                  {{ m.name }} ({{ bill.currency }}{{ m.pricePerTablet }}/tab)
+                </option>
+              </select>
+            </td>
+
+            <!-- Dosage Inputs -->
+            <td><input type="number" class="form-control form-control-sm" [(ngModel)]="med.morningBefore" [readonly]="!isEditMode" min="0" (input)="calculateBill()"></td>
+            <td><input type="number" class="form-control form-control-sm" [(ngModel)]="med.morningAfter" [readonly]="!isEditMode" min="0" (input)="calculateBill()"></td>
+            <td><input type="number" class="form-control form-control-sm" [(ngModel)]="med.afternoonBefore" [readonly]="!isEditMode" min="0" (input)="calculateBill()"></td>
+            <td><input type="number" class="form-control form-control-sm" [(ngModel)]="med.afternoonAfter" [readonly]="!isEditMode" min="0" (input)="calculateBill()"></td>
+            <td><input type="number" class="form-control form-control-sm" [(ngModel)]="med.nightBefore" [readonly]="!isEditMode" min="0" (input)="calculateBill()"></td>
+            <td><input type="number" class="form-control form-control-sm" [(ngModel)]="med.nightAfter" [readonly]="!isEditMode" min="0" (input)="calculateBill()"></td>
+            <td><input type="number" class="form-control form-control-sm" [(ngModel)]="med.days" [readonly]="!isEditMode" min="0" (input)="calculateBill()"></td>
+
+            <!-- Remove Button -->
+            <td *ngIf="isEditMode">
+              <button class="btn btn-danger btn-sm" (click)="removeMedicine(i)">Remove</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
-    <hr>
+    <!-- Add Medicine Button -->
+    <button *ngIf="isEditMode && availableMedicines.length > 0" class="btn btn-outline-primary btn-sm" (click)="addMedicine()">
+      + Add Medicine
+    </button>
+    <small *ngIf="isEditMode && availableMedicines.length === 0" class="text-warning d-block">
+      No medicines available for {{ doctor.info || 'this specialization' }}.
+    </small>
+  </div>
 
-    <!-- Patient Info -->
-    <div class="row mb-3">
-      <div class="col-md-4"><strong>Patient Name:</strong> {{ patient.name || 'N/A' }}</div>
-      <div class="col-md-2"><strong>Age:</strong> {{ patient.age || 0 }}</div>
-      <div class="col-md-2"><strong>Gender:</strong> {{ patient.gender || 'N/A' }}</div>
-      <div class="col-md-4"><strong>Date:</strong> {{ patient.date ? (patient.date | date:'shortDate') : 'N/A' }}</div>
-    </div>
+  <!-- Advice -->
+  <div class="mb-3">
+    <label class="form-label fw-bold">Advice & Follow-Up:</label>
+    <textarea class="form-control" rows="2" [(ngModel)]="advice" [readonly]="!isEditMode" placeholder="Enter advice..."></textarea>
+  </div>
 
-    <!-- Chief Complaints -->
-    <div class="mb-3">
-      <label class="form-label"><strong>Chief Complaints & History:</strong></label>
-      <textarea 
-        class="form-control" 
-        [(ngModel)]="chiefComplaints" 
-        [readonly]="!isEditMode" 
-        placeholder="Enter chief complaints and history..."
-        rows="3"
-      ></textarea>
-    </div>
+  <!-- Bill Summary -->
+  <div class="border p-3 bg-light rounded mb-3">
+    <h5 class="mb-3 text-primary">Bill Summary</h5>
+    <table class="table table-sm table-borderless">
+      <tbody>
+        <tr>
+          <td><strong>Consultation Fee</strong></td>
+          <td class="text-end">{{ bill.currency }}{{ bill.consultationFee.toFixed(2) }}</td>
+        </tr>
+        <tr>
+          <td><strong>Medicine Cost</strong></td>
+          <td class="text-end">{{ bill.currency }}{{ bill.medicineCost.toFixed(2) }}</td>
+        </tr>
+        <tr class="border-top">
+          <td><strong>Subtotal</strong></td>
+          <td class="text-end">{{ bill.currency }}{{ (bill.consultationFee + bill.medicineCost).toFixed(2) }}</td>
+        </tr>
+        <tr>
+          <td><strong>GST (5%)</strong></td>
+          <td class="text-end">{{ bill.currency }}{{ bill.gst.toFixed(2) }}</td>
+        </tr>
+        <tr class="border-top fw-bold text-primary">
+          <td><strong>Total Amount</strong></td>
+          <td class="text-end">{{ bill.currency }}{{ bill.total.toFixed(2) }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
-    <!-- Past History -->
-    <div class="mb-3">
-      <label class="form-label"><strong>Past History:</strong></label>
-      <textarea 
-        class="form-control" 
-        [(ngModel)]="pastHistory" 
-        [readonly]="!isEditMode" 
-        placeholder="Enter past medical history..."
-        rows="3"
-      ></textarea>
-    </div>
-
-    <!-- Examination -->
-    <div class="mb-3">
-      <label class="form-label"><strong>Examination:</strong></label>
-      <textarea 
-        class="form-control" 
-        [(ngModel)]="examination" 
-        [readonly]="!isEditMode" 
-        placeholder="Enter examination findings..."
-        rows="3"
-      ></textarea>
-    </div>
-
-    <!-- Medicines Table -->
-    <div class="mb-3">
-      <h5>Medicines Prescribed:</h5>
-      <div class="table-responsive">
-        <table class="table table-bordered text-center">
-          <thead class="table-light">
-            <tr>
-              <th rowspan="2">Sl. No</th>
-              <th rowspan="2">Medicine Name</th>
-              <th colspan="2">Morning</th>
-              <th colspan="2">Afternoon</th>
-              <th colspan="2">Night</th>
-              <th rowspan="2">Days</th>
-              <th rowspan="2" *ngIf="isEditMode">Action</th>
-            </tr>
-            <tr>
-              <th>Before</th><th>After</th>
-              <th>Before</th><th>After</th>
-              <th>Before</th><th>After</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let med of medicines; let i = index">
-              <td>{{ i + 1 }}</td>
-              <td>
-                <input 
-                  class="form-control" 
-                  [(ngModel)]="med.name" 
-                  [readonly]="!isEditMode" 
-                  placeholder="Medicine name"
-                >
-              </td>
-              <td><input type="number" class="form-control" [(ngModel)]="med.morningBefore" [readonly]="!isEditMode" min="0"></td>
-              <td><input type="number" class="form-control" [(ngModel)]="med.morningAfter" [readonly]="!isEditMode" min="0"></td>
-              <td><input type="number" class="form-control" [(ngModel)]="med.afternoonBefore" [readonly]="!isEditMode" min="0"></td>
-              <td><input type="number" class="form-control" [(ngModel)]="med.afternoonAfter" [readonly]="!isEditMode" min="0"></td>
-              <td><input type="number" class="form-control" [(ngModel)]="med.nightBefore" [readonly]="!isEditMode" min="0"></td>
-              <td><input type="number" class="form-control" [(ngModel)]="med.nightAfter" [readonly]="!isEditMode" min="0"></td>
-              <td><input type="number" class="form-control" [(ngModel)]="med.days" [readonly]="!isEditMode" min="0"></td>
-              <td *ngIf="isEditMode">
-                <button class="btn btn-danger btn-sm" (click)="removeMedicine(i)">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <button *ngIf="isEditMode" class="btn btn-outline-primary btn-sm" (click)="addMedicine()">
-        <i class="bi bi-plus-circle me-1"></i>Add Medicine
-      </button>
-    </div>
-
-    <!-- Advice -->
-    <div class="mb-3">
-      <label class="form-label"><strong>Advice & Follow-Up:</strong></label>
-      <textarea 
-        class="form-control" 
-        [(ngModel)]="advice" 
-        [readonly]="!isEditMode" 
-        placeholder="Enter advice and follow-up instructions..."
-        rows="3"
-      ></textarea>
-    </div>
-
-    <!-- Invoice Amount (only in create mode) -->
-    <div class="mb-3" *ngIf="mode === 'create' && isEditMode">
-      <label class="form-label"><strong>Invoice Amount (₹): *</strong></label>
-      <input 
-        type="number" 
-        class="form-control" 
-        [(ngModel)]="invoiceAmount" 
-        placeholder="Enter consultation fees"
-        min="0"
-        step="0.01"
-        required
-      >
-      <small class="text-muted">This amount will be charged to the patient upon completion.</small>
-    </div>
-
-    <hr>
-
-    <!-- Doctor Signature -->
-    <div class="text-end mb-3">
-      <p class="mb-0"><strong>Dr. {{ doctor.name || 'N/A' }}</strong></p>
-      <p class="mb-0"><small>{{ doctor.info || 'N/A' }}</small></p>
-    </div>
-
-    <!-- Hospital Footer -->
-    <div class="text-center text-muted">
-      <h5>SwasthaTech Hospital</h5>
-      <p class="mb-0">Bellandur, Bengaluru - 560103</p>
-      <p>+91 8888666623 | swasthatech@gmail.com</p>
-    </div>
+  <!-- Footer -->
+  <div class="text-center text-muted small mt-4">
+    <p class="mb-1"><strong>Doctor:</strong> {{ doctor.name || 'N/A' }}</p>
+    <p class="mb-1 fw-bold">SwasthaTech Hospital</p>
+    <p class="mb-0">Bellandur, Bengaluru - 560103 | +91 8888666623 | swasthatech@gmail.com</p>
   </div>
 </div>
 
 <!-- Action Buttons -->
-<div class="mt-3 d-flex gap-2" *ngIf="!isLoading">
-  <!-- View Mode -->
-  <button class="btn btn-primary" *ngIf="!isEditMode && mode === 'view'" (click)="enableEdit()">
-    <i class="bi bi-pencil me-1"></i>Edit
-  </button>
-
-  <!-- Edit Mode -->
-  <button 
-    class="btn btn-success" 
-    *ngIf="isEditMode && mode === 'create'" 
-    (click)="savePrescription()"
-    [disabled]="isLoading"
-  >
-    <i class="bi bi-check-circle me-1"></i>Complete Appointment
-  </button>
-
-  <button 
-    class="btn btn-success" 
-    *ngIf="isEditMode && mode === 'view'" 
-    (click)="savePrescription()"
-    [disabled]="isLoading"
-  >
-    <i class="bi bi-save me-1"></i>Save Changes
-  </button>
-
-  <button 
-    class="btn btn-secondary" 
-    *ngIf="isEditMode" 
-    (click)="cancelEdit()"
-    [disabled]="isLoading"
-  >
-    <i class="bi bi-x-circle me-1"></i>Cancel
-  </button>
-
-  <!-- Download Button (always available) -->
-  <button class="btn btn-outline-dark ms-auto" (click)="downloadPDF()">
-    <i class="bi bi-download me-1"></i>Download PDF
+<div class="mt-4 d-flex gap-2 justify-content-between" data-debug="action-buttons">
+  <div>
+    <button class="btn btn-outline-primary" *ngIf="!isEditMode" (click)="isEditMode = true">
+      Edit
+    </button>
+    <button class="btn btn-success" *ngIf="isEditMode" (click)="savePrescription()">
+      OK
+    </button>
+    <button class="btn btn-secondary" *ngIf="isEditMode" (click)="cancelEdit()">
+      Cancel
+    </button>
+  </div>
+  <button class="btn btn-outline-dark" (click)="downloadPDF()">
+    Download PDF
   </button>
 </div>
