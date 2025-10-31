@@ -49,17 +49,69 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   }
 
   loadDeletedRecordsCount(): void {
+    console.log('Loading deleted records count...');
+    
     forkJoin({
       doctors: this.doctorService.getDeletedDoctors(),
       patients: this.patientService.getDeletedPatients()
     }).subscribe({
       next: ({ doctors, patients }) => {
-        this.deletedRecordsCount = doctors.length + patients.length;
-        console.log('Deleted records count updated:', this.deletedRecordsCount);
+        const doctorsCount = doctors?.length || 0;
+        const patientsCount = patients?.length || 0;
+        this.deletedRecordsCount = doctorsCount + patientsCount;
+        
+        console.log('Deleted doctors:', doctorsCount);
+        console.log('Deleted patients:', patientsCount);
+        console.log('Total deleted records count:', this.deletedRecordsCount);
       },
       error: (error) => {
         console.error('Error loading deleted records count:', error);
-        this.deletedRecordsCount = 0;
+        console.error('Error details:', error.error);
+        
+        // Try to get counts individually if forkJoin fails
+        this.loadDeletedCountsIndividually();
+      }
+    });
+  }
+
+  private loadDeletedCountsIndividually(): void {
+    let doctorsCount = 0;
+    let patientsCount = 0;
+    let completedCalls = 0;
+
+    this.doctorService.getDeletedDoctors().subscribe({
+      next: (doctors) => {
+        doctorsCount = doctors?.length || 0;
+        completedCalls++;
+        if (completedCalls === 2) {
+          this.deletedRecordsCount = doctorsCount + patientsCount;
+          console.log('Total deleted records (individual):', this.deletedRecordsCount);
+        }
+      },
+      error: (err) => {
+        console.error('Error loading deleted doctors:', err);
+        completedCalls++;
+        if (completedCalls === 2) {
+          this.deletedRecordsCount = doctorsCount + patientsCount;
+        }
+      }
+    });
+
+    this.patientService.getDeletedPatients().subscribe({
+      next: (patients) => {
+        patientsCount = patients?.length || 0;
+        completedCalls++;
+        if (completedCalls === 2) {
+          this.deletedRecordsCount = doctorsCount + patientsCount;
+          console.log('Total deleted records (individual):', this.deletedRecordsCount);
+        }
+      },
+      error: (err) => {
+        console.error('Error loading deleted patients:', err);
+        completedCalls++;
+        if (completedCalls === 2) {
+          this.deletedRecordsCount = doctorsCount + patientsCount;
+        }
       }
     });
   }

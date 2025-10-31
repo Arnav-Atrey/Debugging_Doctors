@@ -196,20 +196,85 @@ namespace Hospital_Management_system.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> PermanentDeleteDoctor(int id)
         {
-            var doctor = await _context.Doctors
-                .IgnoreQueryFilters()
-                .FirstOrDefaultAsync(d => d.DocId == id);
-
-            if (doctor == null)
+            try
             {
-                return NotFound();
+                // Find doctor with query filters ignored to get soft-deleted records
+                var doctor = await _context.Doctors
+                    .IgnoreQueryFilters()
+                    .FirstOrDefaultAsync(d => d.DocId == id);
+
+                if (doctor == null)
+                {
+                    return NotFound(new { message = "Doctor not found" });
+                }
+
+                // Get ALL appointments for this doctor (including soft-deleted ones)
+                var appointments = await _context.Appointments
+                    .IgnoreQueryFilters()
+                    .Where(a => a.DoctorId == id)
+                    .ToListAsync();
+
+                var deletedPrescriptionsCount = 0; // Track count separately
+
+                if (appointments.Any())
+                {
+                    var appointmentIds = appointments.Select(a => a.AppointmentId).ToList();
+
+                    // Declare prescriptions outside the if block
+                    var prescriptions = await _context.Prescriptions
+                        .Where(p => appointmentIds.Contains(p.AppointmentID))
+                        .ToListAsync();
+
+                    if (prescriptions.Any())
+                    {
+                        _context.Prescriptions.RemoveRange(prescriptions);
+                        await _context.SaveChangesAsync();
+                        deletedPrescriptionsCount = prescriptions.Count; // Capture count
+                    }
+
+                    // Delete all appointments
+                    _context.Appointments.RemoveRange(appointments);
+                    await _context.SaveChangesAsync();
+                }
+                else
+                {
+                    deletedPrescriptionsCount = 0;
+                }
+                // Now delete the doctor
+                _context.Doctors.Remove(doctor);
+                await _context.SaveChangesAsync();
+
+                // Finally, delete the user account
+                var user = await _context.Users
+                    .IgnoreQueryFilters()
+                    .FirstOrDefaultAsync(u => u.UserId == doctor.UserId);
+
+                if (user != null)
+                {
+                    _context.Users.Remove(user);
+                    await _context.SaveChangesAsync();
+                }
+
+                return Ok(new
+                {
+                    message = "Doctor and related records permanently deleted",
+                    deletedAppointments = appointments.Count,
+                    deletedPrescriptions = deletedPrescriptionsCount
+                });
             }
+            catch (Exception ex)
+            {
+                // Log the full exception for debugging
+                Console.WriteLine($"Error deleting doctor: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
 
-            // Use Remove instead of setting IsDeleted to perform hard delete
-            _context.Doctors.Remove(doctor);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { message = "Doctor permanently deleted" });
+                return StatusCode(500, new
+                {
+                    message = "Failed to permanently delete doctor",
+                    error = ex.Message,
+                    innerError = ex.InnerException?.Message
+                });
+            }
         }
 
         // GET: api/Doctors/specialization/{specialization}

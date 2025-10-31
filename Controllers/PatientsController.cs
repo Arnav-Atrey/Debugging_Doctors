@@ -209,6 +209,8 @@ namespace Hospital_Management_system.Controllers
             return patientDtos;
         }
 
+
+
         // DELETE: api/Patients/5 (Soft Delete)
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
@@ -259,6 +261,8 @@ namespace Hospital_Management_system.Controllers
         {
             var patient = await _context.Patients
                 .IgnoreQueryFilters()
+                .Include(p => p.Appointments) // Include appointments to check
+                .Include(p => p.User)
                 .FirstOrDefaultAsync(p => p.PatientId == id);
 
             if (patient == null)
@@ -266,10 +270,46 @@ namespace Hospital_Management_system.Controllers
                 return NotFound();
             }
 
-            _context.Patients.Remove(patient);
-            await _context.SaveChangesAsync();
+            // Delete related appointments first (cascade delete)
+            if (patient.Appointments != null && patient.Appointments.Any())
+            {
+                // Delete all prescriptions associated with appointments
+                var appointmentIds = patient.Appointments.Select(a => a.AppointmentId).ToList();
+                var prescriptions = await _context.Prescriptions
+                    .Where(p => appointmentIds.Contains(p.AppointmentID))
+                    .ToListAsync();
 
-            return Ok(new { message = "Patient permanently deleted" });
+                if (prescriptions.Any())
+                {
+                    _context.Prescriptions.RemoveRange(prescriptions);
+                }
+
+                // Now delete appointments
+                _context.Appointments.RemoveRange(patient.Appointments);
+            }
+
+            // Delete the user account (this should cascade to patient, but we'll do it explicitly)
+            if (patient.User != null)
+            {
+                _context.Users.Remove(patient.User);
+            }
+
+            // Delete the patient
+            _context.Patients.Remove(patient);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                return Ok(new { message = "Patient and related records permanently deleted" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "Failed to permanently delete patient",
+                    error = ex.Message
+                });
+            }
         }
 
         private bool PatientExists(int id)

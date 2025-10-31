@@ -104,44 +104,92 @@ export class DeletedRecordsComponent implements OnInit {
   }
 
   permanentDeleteDoctor(doctorId: number): void {
-    if (!confirm('WARNING: This will PERMANENTLY delete the doctor. This action cannot be undone. Are you sure?')) {
+    const message = `⚠️ WARNING: This will PERMANENTLY delete the doctor and ALL associated data including:
+    
+    • All appointments with this doctor
+    • All prescriptions from these appointments
+    • The doctor's user account
+    
+    This action CANNOT be undone!
+    
+    Are you absolutely sure you want to proceed?`;
+    
+    if (!confirm(message)) {
       return;
     }
 
+    // Set loading state for this specific doctor
+    const doctorIndex = this.deletedDoctors.findIndex(d => d.docId === doctorId);
+    if (doctorIndex === -1) return;
+
     this.isLoading = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
     this.doctorService.permanentDeleteDoctor(doctorId).subscribe({
       next: () => {
-        this.successMessage = 'Doctor permanently deleted.';
-        this.isLoading = false;
-        // Remove from local array immediately for UI update
+        // Remove from array immediately - this will hide the card
         this.deletedDoctors = this.deletedDoctors.filter(d => d.docId !== doctorId);
-        setTimeout(() => this.successMessage = '', 3000);
+        
+        this.successMessage = 'Doctor and all related records permanently deleted from database.';
+        this.isLoading = false;
+        
+        console.log('Doctor permanently deleted. Remaining deleted doctors:', this.deletedDoctors.length);
+        
+        setTimeout(() => {
+          this.successMessage = '';
+        }, 3000);
       },
       error: (error) => {
         console.error('Error permanently deleting doctor:', error);
-        this.errorMessage = 'Failed to permanently delete doctor.';
+        console.error('Error details:', error.error);
+        this.errorMessage = error.error?.message || error.error?.title || 'Failed to permanently delete doctor.';
         this.isLoading = false;
       }
     });
   }
 
   permanentDeletePatient(patientId: number): void {
-    if (!confirm('WARNING: This will PERMANENTLY delete the patient. This action cannot be undone. Are you sure?')) {
+    const message = `⚠️ WARNING: This will PERMANENTLY delete the patient and ALL associated data including:
+    
+    • All appointments with this patient
+    • All prescriptions from these appointments
+    • The patient's user account
+    
+    This action CANNOT be undone!
+    
+    Are you absolutely sure you want to proceed?`;
+    
+    if (!confirm(message)) {
       return;
     }
 
+    // Set loading state for this specific patient
+    const patientIndex = this.deletedPatients.findIndex(p => p.patientId === patientId);
+    if (patientIndex === -1) return;
+
     this.isLoading = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
     this.patientService.permanentDeletePatient(patientId).subscribe({
       next: () => {
-        this.successMessage = 'Patient permanently deleted.';
-        this.isLoading = false;
-        // Remove from local array immediately for UI update
+        // Remove from array immediately - this will hide the card
         this.deletedPatients = this.deletedPatients.filter(p => p.patientId !== patientId);
-        setTimeout(() => this.successMessage = '', 3000);
+        
+        this.successMessage = 'Patient and all related records permanently deleted from database.';
+        this.isLoading = false;
+        
+        console.log('Patient permanently deleted. Remaining deleted patients:', this.deletedPatients.length);
+        
+        setTimeout(() => {
+          this.successMessage = '';
+        }, 3000);
       },
       error: (error) => {
         console.error('Error permanently deleting patient:', error);
-        this.errorMessage = 'Failed to permanently delete patient.';
+        console.error('Error details:', error.error);
+        this.errorMessage = error.error?.message || error.error?.title || 'Failed to permanently delete patient.';
         this.isLoading = false;
       }
     });

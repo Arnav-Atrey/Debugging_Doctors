@@ -48,8 +48,11 @@
       <div class="card text-white bg-dark">
         <div class="card-body">
           <h5 class="card-title">Deleted Records</h5>
-          <h2 class="display-4">{{ deletedRecordsCount || 0 }}</h2>
+          <h2 class="display-4">{{ deletedRecordsCount }}</h2>
           <a routerLink="/admin/deleted-records" class="btn btn-light btn-sm mt-2">View Deleted</a>
+          <small class="d-block mt-2 text-muted" *ngIf="deletedRecordsCount === 0">
+            No soft-deleted records
+          </small>
         </div>
       </div>
     </div>
