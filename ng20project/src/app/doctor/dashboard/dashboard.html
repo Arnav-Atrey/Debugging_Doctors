@@ -176,14 +176,17 @@
         </div>
         <div class="card-body">
           <app-prescription
-            [appointmentId]="selectedPrescriptionAppointmentId!"
-            [doctorId]="doctorId"
-            [patient]="patientData"
-            [doctor]="doctorData"
-            [mode]="prescriptionMode"
-            (save)="savePrescription($event)"
-            (cancel)="cancelPrescription()">
-          </app-prescription>
+        [appointmentId]="selectedPrescriptionAppointmentId!"
+        [doctorId]="doctorId"
+        [patient]="patientData"
+        [doctor]="doctorData"
+        (save)="savePrescription($event)"
+        (cancel)="cancelPrescription()"
+        [attr.data-patient-name]="patientData.name"
+        [attr.data-patient-age]="patientData.age"
+        [attr.data-doctor-name]="doctorData.name"
+        [attr.data-doctor-info]="doctorData.info">
+      </app-prescription>
         </div>
       </div>
     </div>

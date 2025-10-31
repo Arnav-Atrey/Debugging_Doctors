@@ -90,8 +90,7 @@
         <app-prescription
           [patient]="{ name: selectedAppointmentForPrescription?.patientName, age: selectedAppointmentForPrescription?.age, date: selectedAppointmentForPrescription?.appointmentDate }"
           [doctor]="{ name: selectedAppointmentForPrescription?.doctorName }"
-          [mode]="'view'"
-          (cancel)="closePrescriptionModal()"
+          (cancel)="closePrescriptionModal()">
         ></app-prescription>
       </div>
     </div>
