@@ -5,6 +5,7 @@
         public int AppointmentId { get; set; }
         public string Diagnosis { get; set; }
         public List<MedicineDto> Medicines { get; set; }
+<<<<<<< HEAD
         public string ChiefComplaints { get; set; }
         public string PastHistory { get; set; }
         public string Examination { get; set; }
@@ -12,6 +13,13 @@
 
         // Added for completing appointment
         public decimal? InvoiceAmount { get; set; }
+=======
+
+        public string ChiefComplaints { get; set; }
+        public string PastHistory { get; set; }
+        public string Examination { get; set; }
+        public string Advice { get; set; }
+>>>>>>> origin/bycts9
     }
 
     public class MedicineDto

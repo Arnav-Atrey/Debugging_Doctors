@@ -23,14 +23,21 @@ public partial class DebuggingDoctorsContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
+<<<<<<< HEAD
     public DbSet<Prescription> Prescriptions { get; set; }  // New DbSet
 
     public virtual DbSet<Admin> Admins { get; set; }
+=======
+    public virtual DbSet<Medicine> Medicines { get; set; }
+
+    public DbSet<Prescription> Prescriptions { get; set; }
+>>>>>>> origin/bycts9
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlServer("Name=ConnectionStrings:mycon");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
+<<<<<<< HEAD
     {
         // Apply global query filters for soft delete
         modelBuilder.Entity<User>().HasQueryFilter(u => !u.IsDeleted);
@@ -39,6 +46,9 @@ public partial class DebuggingDoctorsContext : DbContext
         modelBuilder.Entity<Appointment>().HasQueryFilter(a => !a.IsDeleted);
         modelBuilder.Entity<Admin>().HasQueryFilter(a => !a.IsDeleted);
 
+=======
+    {
+>>>>>>> origin/bycts9
         modelBuilder.Entity<Appointment>(entity =>
         {
             entity.HasKey(e => e.AppointmentId).HasName("PK__Appointm__8ECDFCA231D090B1");
@@ -57,6 +67,14 @@ public partial class DebuggingDoctorsContext : DbContext
                 .HasColumnName("Invoice_Status");
             entity.Property(e => e.PatientId).HasColumnName("PatientID");
 
+<<<<<<< HEAD
+=======
+            // ✅ Configure IsApproved
+            entity.Property(e => e.IsApproved)
+                .HasDefaultValue(false)
+                .IsRequired();
+
+>>>>>>> origin/bycts9
             entity.HasOne(d => d.Doctor).WithMany(p => p.Appointments)
                 .HasForeignKey(d => d.DoctorId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -75,7 +93,11 @@ public partial class DebuggingDoctorsContext : DbContext
             entity.Property(e => e.DocId).HasColumnName("DocID");
             entity.Property(e => e.Availability).HasMaxLength(255);
             entity.Property(e => e.ContactNo).HasMaxLength(20);
+<<<<<<< HEAD
             entity.Property(e => e.HPID).HasMaxLength(100);
+=======
+            entity.Property(e => e.HPID).HasMaxLength(14);  // ✅ Updated length
+>>>>>>> origin/bycts9
             entity.Property(e => e.FullName).HasMaxLength(100);
             entity.Property(e => e.Specialisation).HasMaxLength(100);
             entity.Property(e => e.UserId).HasColumnName("UserID");
@@ -96,6 +118,10 @@ public partial class DebuggingDoctorsContext : DbContext
             entity.Property(e => e.FullName).HasMaxLength(100);
             entity.Property(e => e.Gender).HasMaxLength(20);
             entity.Property(e => e.UserId).HasColumnName("UserID");
+<<<<<<< HEAD
+=======
+            entity.Property(e => e.Aadhaar_no).HasMaxLength(12);  // ✅ ADDED
+>>>>>>> origin/bycts9
 
             entity.HasOne(d => d.User).WithMany(p => p.Patients)
                 .HasForeignKey(d => d.UserId)
@@ -117,6 +143,7 @@ public partial class DebuggingDoctorsContext : DbContext
             entity.Property(e => e.Role).HasMaxLength(20);
         });
 
+<<<<<<< HEAD
     
 
         // Configure Prescription relationship
@@ -181,3 +208,48 @@ public partial class DebuggingDoctorsContext : DbContext
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }
+=======
+        modelBuilder.Entity<Medicine>().HasData(
+        // General Medicine
+        new Medicine { MedicineID = 1, Name = "Paracetamol 500mg", Specialization = "General", PricePerTablet = 2.00m },
+        new Medicine { MedicineID = 2, Name = "Amoxicillin 500mg", Specialization = "General", PricePerTablet = 10.00m },
+        new Medicine { MedicineID = 3, Name = "Cetirizine 10mg", Specialization = "General", PricePerTablet = 3.50m },
+        new Medicine { MedicineID = 4, Name = "Metformin 500mg", Specialization = "General", PricePerTablet = 4.00m },
+
+        // Cardiology
+        new Medicine { MedicineID = 5, Name = "Amlodipine 5mg", Specialization = "Cardiology", PricePerTablet = 5.00m },
+        new Medicine { MedicineID = 6, Name = "Atorvastatin 20mg", Specialization = "Cardiology", PricePerTablet = 8.00m },
+        new Medicine { MedicineID = 7, Name = "Clopidogrel 75mg", Specialization = "Cardiology", PricePerTablet = 12.00m },
+
+        // Psychiatry
+        new Medicine { MedicineID = 8, Name = "Sertraline 50mg", Specialization = "Psychiatry", PricePerTablet = 15.00m },
+        new Medicine { MedicineID = 9, Name = "Escitalopram 10mg", Specialization = "Psychiatry", PricePerTablet = 18.00m },
+        new Medicine { MedicineID = 10, Name = "Alprazolam 0.5mg", Specialization = "Psychiatry", PricePerTablet = 7.00m }
+    );
+
+        // Configure Prescription
+        modelBuilder.Entity<Prescription>(entity =>
+        {
+            entity.HasKey(e => e.PrescriptionID);
+
+            entity.Property(e => e.PrescriptionID).HasColumnName("PrescriptionID");
+            entity.Property(e => e.AppointmentID).HasColumnName("AppointmentID");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.UpdatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+
+            entity.HasOne(p => p.Appointment)
+                .WithOne(a => a.Prescription)
+                .HasForeignKey<Prescription>(p => p.AppointmentID)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        base.OnModelCreating(modelBuilder);
+    }
+
+    partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
+}
+>>>>>>> origin/bycts9

@@ -21,12 +21,16 @@ public partial class Patient
 
     public string? Aadhaar_no { get; set; }
 
+<<<<<<< HEAD
     public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 
     // Soft Delete properties
     public bool IsDeleted { get; set; }
     public DateTime? DeletedAt { get; set; }
     public int? DeletedBy { get; set; }
+=======
+    public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
+>>>>>>> origin/bycts9
 
     public virtual User User { get; set; } = null!;
 }

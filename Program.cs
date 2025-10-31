@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 using Hospital_Management_system.Models;
 using Hospital_Management_system.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -5,6 +6,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Text.Json.Serialization;
+=======
+using System.Text.Json.Serialization;
+using Hospital_Management_system.Models;
+using Microsoft.EntityFrameworkCore;
+>>>>>>> origin/bycts9
 
 namespace Hospital_Management_system
 {
@@ -14,7 +20,10 @@ namespace Hospital_Management_system
         {
             var builder = WebApplication.CreateBuilder(args);
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/bycts9
             // Add services to the container.
             builder.Services.AddControllers()
                 .AddJsonOptions(options =>
@@ -27,6 +36,7 @@ namespace Hospital_Management_system
                 });
 
             builder.Services.AddDbContext<DebuggingDoctorsContext>(options =>
+<<<<<<< HEAD
                 options.UseSqlServer(builder.Configuration.GetConnectionString("mycon")));
 
             // Register JWT Service
@@ -64,6 +74,9 @@ namespace Hospital_Management_system
                 options.AddPolicy("DoctorOrAdmin", policy => policy.RequireRole("Doctor", "Admin"));
             });
 
+=======
+                options.UseSqlServer(builder.Configuration.GetConnectionString("mycon")));
+>>>>>>> origin/bycts9
 
             builder.Services.AddCors(options =>
             {
@@ -81,6 +94,7 @@ namespace Hospital_Management_system
 
             // Add services to the container.
 
+<<<<<<< HEAD
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             // Add Swagger
@@ -111,6 +125,12 @@ namespace Hospital_Management_system
                     }
                 });
              });
+=======
+            builder.Services.AddControllers();
+            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen();
+>>>>>>> origin/bycts9
 
             var app = builder.Build();
 
@@ -123,10 +143,15 @@ namespace Hospital_Management_system
 
             app.UseHttpsRedirection();
 
+<<<<<<< HEAD
             app.UseCors("AllowAngularApp");
 
             // Authentication & Authorization (ORDER MATTERS!)
             app.UseAuthentication();  // Must come before UseAuthorization
+=======
+            app.UseCors("AllowAngularApp");
+
+>>>>>>> origin/bycts9
             app.UseAuthorization();
 
 

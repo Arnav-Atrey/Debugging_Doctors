@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 .vs/
 
 # .NET Core
@@ -7,3 +8,6 @@ obj/
 *.exe
 *.pdb
 *.cache
+=======
+.vs/
+>>>>>>> origin/bycts9

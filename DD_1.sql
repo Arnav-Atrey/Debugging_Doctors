@@ -52,6 +52,7 @@ CREATE TABLE Appointments (
     CONSTRAINT FK_Appointments_Doctors FOREIGN KEY (DoctorID) REFERENCES Doctors(DocID) ON DELETE NO ACTION
 );
 
+<<<<<<< HEAD
 -- Creating Prescriptions table
 CREATE TABLE Prescriptions (
     PrescriptionID INT PRIMARY KEY IDENTITY(1,1),
@@ -67,6 +68,8 @@ CREATE TABLE Prescriptions (
     CONSTRAINT FK_Prescriptions_Appointments FOREIGN KEY (AppointmentID) REFERENCES Appointments(AppointmentID) ON DELETE CASCADE
 );
 
+=======
+>>>>>>> origin/bycts9
 ALTER TABLE Patients
     ALTER COLUMN Symptoms NVARCHAR(12);
 EXEC sp_rename 'Patients.Symptoms', 'Aadhaar_no', 'COLUMN';
@@ -75,6 +78,7 @@ ALTER TABLE Doctors
     ALTER COLUMN Dept NVARCHAR(14);
 EXEC sp_rename 'Doctors.Dept', 'HPID', 'COLUMN';
 
+<<<<<<< HEAD
 -- Create Admins table
 CREATE TABLE Admins (
     AdminID INT PRIMARY KEY IDENTITY(1,1),
@@ -143,6 +147,8 @@ CREATE INDEX IX_Patients_IsDeleted ON Patients(IsDeleted);
 CREATE INDEX IX_Appointments_IsDeleted ON Appointments(IsDeleted);
 CREATE INDEX IX_Admins_IsDeleted ON Admins(IsDeleted);
 
+=======
+>>>>>>> origin/bycts9
 ------------------------------------------------------------------------------------------------------
 CREATE PROCEDURE GetPatientDataForApprovedAppointment
     @AppointmentId INT,
@@ -186,9 +192,15 @@ BEGIN
             -- Retrieve patient data
             SELECT 
                 p.PatientId,
+<<<<<<< HEAD
                 p.FullName,
                 p.Aadhaar_no,
                 p.ContactNo, -- Adjust based on actual Patient table columns
+=======
+                p.Name,
+                p.AadhaarNo,
+                p.Contact, -- Adjust based on actual Patient table columns
+>>>>>>> origin/bycts9
                 p.DOB,    -- Adjust based on actual Patient table columns
                 a.AppointmentId,
                 a.AppointmentDate,

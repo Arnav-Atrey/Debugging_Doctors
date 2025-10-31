@@ -19,10 +19,14 @@ namespace Hospital_Management_system.Models.DTOs
         public string Role { get; set; }
         public int? PatientId { get; set; }
         public int? DoctorId { get; set; }
+<<<<<<< HEAD
         public int? AdminId { get; set; }
         public string? FullName { get; set; }
 
         public string Token { get; set; } = null!;  // Add JWT token
         public DateTime ExpiresAt { get; set; }      // Token expiry
+=======
+        public string? FullName { get; set; }
+>>>>>>> origin/bycts9
     }
 }
