@@ -92,6 +92,31 @@ select * from users
 select * from doctors
 select * from patients
 
+-- Create Medicines table
+CREATE TABLE Medicines (
+    MedicineID INT PRIMARY KEY IDENTITY(1,1),
+    Name NVARCHAR(200) NOT NULL,
+    Specialization NVARCHAR(100) NOT NULL,
+    PricePerTablet DECIMAL(10,2) NOT NULL,
+    GenericName NVARCHAR(200) NULL
+);
+
+-- Insert seed data
+INSERT INTO Medicines (Name, Specialization, PricePerTablet, GenericName) VALUES
+('Paracetamol 500mg', 'General', 2.00, NULL),
+('Amoxicillin 500mg', 'General', 10.00, NULL),
+('Cetirizine 10mg', 'General', 3.50, NULL),
+('Metformin 500mg', 'General', 4.00, NULL),
+('Amlodipine 5mg', 'Cardiology', 5.00, NULL),
+('Atorvastatin 20mg', 'Cardiology', 8.00, NULL),
+('Clopidogrel 75mg', 'Cardiology', 12.00, NULL),
+('Sertraline 50mg', 'Psychiatry', 15.00, NULL),
+('Escitalopram 10mg', 'Psychiatry', 18.00, NULL),
+('Alprazolam 0.5mg', 'Psychiatry', 7.00, NULL);
+
+-- Verify the data
+SELECT * FROM Medicines;
+
 --password is Admin@12345
 INSERT INTO Users (Email, PswdHash, Role, CreatedAt)
 VALUES ('swasthratechadmin@swasthatech.com', '6f2cb9dd8f4b65e24e1c3f3fa5bc57982349237f11abceacd45bbcb74d621c25', 'Admin', GETDATE());

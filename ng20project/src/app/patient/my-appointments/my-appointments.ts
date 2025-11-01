@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AppointmentService, AppointmentResponseDto } from '../../services/appointmentservices';
 import { PrescriptionComponent } from '../../prescription/prescription.component';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-my-appointments',
@@ -18,10 +19,13 @@ export class MyAppointmentsComponent implements OnInit {
   successMessage: string = '';
   isLoading: boolean = false;
   showPrescriptionModal: boolean = false;
-  selectedAppointmentForPrescription: AppointmentResponseDto | null = null;
+  selectedAppointmentForPrescription: any = null;
 
 
-  constructor(private appointmentService: AppointmentService) {}
+  constructor(
+    private appointmentService: AppointmentService,
+    private http: HttpClient
+  ) {}
 
   ngOnInit(): void {
     this.loadPatientId();
@@ -32,7 +36,7 @@ export class MyAppointmentsComponent implements OnInit {
     const user = localStorage.getItem('user');
     if (user) {
       const userData = JSON.parse(user);
-      this.patientId = userData.patientId || 1;
+      this.patientId = userData.patientId || 0;
     }
   }
 
@@ -93,13 +97,87 @@ export class MyAppointmentsComponent implements OnInit {
     return status === 'Pending' || status === 'Confirmed';
   }
 
-  viewPrescription(appointment: AppointmentResponseDto): void {
-  this.selectedAppointmentForPrescription = appointment;
-  this.showPrescriptionModal = true;
+getAppointmentDate(dateString: string): Date | null {
+  return dateString ? new Date(dateString) : null;
 }
 
-closePrescriptionModal(): void {
-  this.showPrescriptionModal = false;
-  this.selectedAppointmentForPrescription = null;
-}
+// viewPrescription(appointment: AppointmentResponseDto): void {
+//   this.selectedAppointmentForPrescription = appointment;
+//   this.showPrescriptionModal = true;
+// }
+
+  viewPrescription(appointment: AppointmentResponseDto): void {
+    console.log('Viewing prescription for appointment:', appointment);
+    
+    // Fetch complete patient data including age
+    this.http.get(`https://localhost:7090/api/Patients/${this.patientId}`).subscribe({
+      next: (patientData: any) => {
+        console.log('Patient data fetched:', patientData);
+        
+        // Calculate age from DOB
+        let age = 0;
+        if (patientData.dob) {
+          const dob = new Date(patientData.dob);
+          const today = new Date();
+          age = today.getFullYear() - dob.getFullYear();
+          const monthDiff = today.getMonth() - dob.getMonth();
+          if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+            age--;
+          }
+        }
+
+        // Fetch doctor data
+        this.http.get(`https://localhost:7090/api/Doctors/${appointment.doctorId}`).subscribe({
+          next: (doctorData: any) => {
+            console.log('Doctor data fetched:', doctorData);
+            
+            this.selectedAppointmentForPrescription = {
+              appointmentId: appointment.appointmentId,
+              patientName: appointment.patientName,
+              age: age,
+              appointmentDate: appointment.appointmentDate,
+              doctorName: doctorData.fullName || appointment.doctorName,
+              doctorSpecialization: doctorData.specialisation || appointment.specialisation,
+              invoiceAmount: appointment.invoiceAmount
+            };
+            
+            console.log('Selected appointment for prescription:', this.selectedAppointmentForPrescription);
+            this.showPrescriptionModal = true;
+          },
+          error: (err) => {
+            console.error('Error fetching doctor data:', err);
+            // Fallback to appointment data
+            this.selectedAppointmentForPrescription = {
+              appointmentId: appointment.appointmentId,
+              patientName: appointment.patientName,
+              age: age,
+              appointmentDate: appointment.appointmentDate,
+              doctorName: appointment.doctorName,
+              doctorSpecialization: appointment.specialisation,
+              invoiceAmount: appointment.invoiceAmount
+            };
+            this.showPrescriptionModal = true;
+          }
+        });
+      },
+      error: (err) => {
+        console.error('Error fetching patient data:', err);
+        // Fallback to basic appointment data
+        this.selectedAppointmentForPrescription = {
+          appointmentId: appointment.appointmentId,
+          patientName: appointment.patientName,
+          age: 0,
+          appointmentDate: appointment.appointmentDate,
+          doctorName: appointment.doctorName,
+          doctorSpecialization: appointment.specialisation,
+          invoiceAmount: appointment.invoiceAmount
+        };
+        this.showPrescriptionModal = true;
+      }
+    });
+  }
+  closePrescriptionModal(): void {
+    this.showPrescriptionModal = false;
+    this.selectedAppointmentForPrescription = null;
+  }
 }

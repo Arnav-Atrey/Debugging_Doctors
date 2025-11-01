@@ -61,7 +61,7 @@ namespace Hospital_Management_system.Controllers
                     Dob = patient.Dob,
                     Gender = patient.Gender,
                     Address = patient.Address,
-                    Age = age,
+                    Age = age,  // This is now correctly set
                     AppointmentId = appointment.AppointmentId,
                     AppointmentDate = appointment.AppointmentDate,
                     Symptoms = appointment.Symptoms

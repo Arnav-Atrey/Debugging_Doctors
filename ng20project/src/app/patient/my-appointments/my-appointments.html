@@ -78,21 +78,29 @@
   </div>
 
   <!-- Prescription viewer (inline card) -->
-  <div *ngIf="showPrescriptionModal" class="mt-4">
-    <div class="card">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Prescription</h5>
-        <button class="btn btn-sm btn-outline-secondary" (click)="closePrescriptionModal()">
-          <i class="bi bi-x-lg"></i>
-        </button>
-      </div>
-      <div class="card-body">
-        <app-prescription
-          [patient]="{ name: selectedAppointmentForPrescription?.patientName, age: selectedAppointmentForPrescription?.age, date: selectedAppointmentForPrescription?.appointmentDate }"
-          [doctor]="{ name: selectedAppointmentForPrescription?.doctorName }"
-          (cancel)="closePrescriptionModal()">
-        ></app-prescription>
-      </div>
+<div *ngIf="showPrescriptionModal && selectedAppointmentForPrescription" class="mt-4">
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Prescription</h5>
+      <button class="btn btn-sm btn-outline-secondary" (click)="closePrescriptionModal()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="card-body">
+      <app-prescription
+        [appointmentId]="selectedAppointmentForPrescription.appointmentId"
+        [patient]="{ 
+          name: selectedAppointmentForPrescription.patientName || 'N/A', 
+          age: selectedAppointmentForPrescription.age || 0, 
+          date: getAppointmentDate(selectedAppointmentForPrescription.appointmentDate)
+        }"
+        [doctor]="{ 
+          name: selectedAppointmentForPrescription.doctorName || 'N/A',
+          info: selectedAppointmentForPrescription.specialisation || 'N/A'
+        }"
+        (cancel)="closePrescriptionModal()">
+      </app-prescription>
     </div>
   </div>
+</div>
 </div>

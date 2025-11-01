@@ -27,6 +27,8 @@ public partial class DebuggingDoctorsContext : DbContext
 
     public virtual DbSet<Admin> Admins { get; set; }
 
+    public virtual DbSet<Medicine> Medicines { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlServer("Name=ConnectionStrings:mycon");
 
@@ -115,6 +117,27 @@ public partial class DebuggingDoctorsContext : DbContext
             entity.Property(e => e.Email).HasMaxLength(255);
             entity.Property(e => e.PswdHash).HasMaxLength(255);
             entity.Property(e => e.Role).HasMaxLength(20);
+        });
+
+        // Configure Medicine entity
+        modelBuilder.Entity<Medicine>(entity =>
+        {
+            entity.HasKey(e => e.MedicineID);
+
+            entity.Property(e => e.Name)
+                .IsRequired()
+                .HasMaxLength(200);
+
+            entity.Property(e => e.Specialization)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            entity.Property(e => e.PricePerTablet)
+                .HasColumnType("decimal(10,2)")
+                .IsRequired();
+
+            entity.Property(e => e.GenericName)
+                .HasMaxLength(200);
         });
 
         modelBuilder.Entity<Medicine>().HasData(

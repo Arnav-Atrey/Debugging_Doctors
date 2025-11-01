@@ -10,6 +10,19 @@ public class MedicinesController : ControllerBase
 
     public MedicinesController(DebuggingDoctorsContext context) => _context = context;
 
+    // NEW: Get all medicines without specialization filter
+    [HttpGet("all")]
+    public async Task<ActionResult<IEnumerable<object>>> GetAllMedicines()
+    {
+        var meds = await _context.Set<Medicine>()
+            .OrderBy(m => m.Name)
+            .Select(m => new { m.MedicineID, m.Name, m.PricePerTablet })
+            .ToListAsync();
+
+        return Ok(meds);
+    }
+
+    // Keep existing endpoint for backward compatibility
     [HttpGet("specialization/{specialization}")]
     public async Task<ActionResult<IEnumerable<object>>> GetBySpecialization(string specialization)
     {

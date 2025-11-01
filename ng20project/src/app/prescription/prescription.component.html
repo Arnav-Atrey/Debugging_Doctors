@@ -11,10 +11,10 @@
 
   <hr class="my-3">
 
-  <!-- Patient Info -->
+  <!-- Patient Info - FIXED AGE DISPLAY -->
   <div class="row mb-3 text-muted small" data-debug="patient-info">
     <div class="col-md-4"><strong>Patient:</strong> {{ patient.name || 'N/A' }}</div>
-    <div class="col-md-4"><strong>Age:</strong> {{ patient.age || 0 }}</div>
+    <div class="col-md-4"><strong>Age:</strong> {{ patient.age || 0 }} years</div>
     <div class="col-md-4"><strong>Date:</strong> {{ patient.date ? (patient.date | date:'shortDate') : 'N/A' }}</div>
   </div>
 
@@ -39,6 +39,12 @@
   <!-- Medicines Table -->
   <div class="mb-3">
     <label class="form-label fw-bold d-block">Medicines Prescribed:</label>
+    
+    <!-- Loading indicator -->
+    <div *ngIf="availableMedicines.length === 0 && isEditMode" class="alert alert-info">
+      <i class="bi bi-hourglass-split me-2"></i>Loading medicines...
+    </div>
+
     <div class="table-responsive">
       <table class="table table-bordered text-center align-middle" data-debug="medicines-table">
         <thead class="table-light">
@@ -64,12 +70,11 @@
 
             <!-- Medicine Dropdown -->
             <td>
-              {{med.medicineID}}
               <select class="form-control form-control-sm"
                       [(ngModel)]="med.medicineID"
                       (change)="onMedicineChange(med, $event)"
                       [disabled]="!isEditMode">
-                <option>-- Select Medicine --</option>
+                <option value="0">-- Select Medicine --</option>
                 <option *ngFor="let m of availableMedicines" [ngValue]="m.medicineID">
                   {{ m.name }} ({{ bill.currency }}{{ m.pricePerTablet }}/tab)
                 </option>
@@ -94,13 +99,10 @@
       </table>
     </div>
 
-    <!-- Add Medicine Button -->
-    <button *ngIf="isEditMode && availableMedicines.length > 0" class="btn btn-outline-primary btn-sm" (click)="addMedicine()">
+    <!-- Add Medicine Button - Always show when in edit mode -->
+    <button *ngIf="isEditMode" class="btn btn-outline-primary btn-sm" (click)="addMedicine()">
       + Add Medicine
     </button>
-    <small *ngIf="isEditMode && availableMedicines.length === 0" class="text-warning d-block">
-      No medicines available for {{ doctor.info || 'this specialization' }}.
-    </small>
   </div>
 
   <!-- Advice -->

@@ -279,15 +279,9 @@ export class DoctorDashboardComponent implements OnInit {
 
   this.selectedPrescriptionAppointmentId = appointment.appointmentId;
   this.showPrescriptionForm = true;
-  this.prescriptionMode = 'create'; // Set mode for new prescription
+  this.prescriptionMode = 'create';
   
-  this.patientData = {
-    name: appointment.patientName || 'N/A',
-    age: 0,
-    date: appointment.appointmentDate ? new Date(appointment.appointmentDate) : null
-  };
-
-  // Fetch complete patient data
+  // Fetch complete patient data including age
   this.http.get(`https://localhost:7090/api/Appointments/patient-data`, {
     params: {
       appointmentId: appointment.appointmentId.toString(),
@@ -296,14 +290,23 @@ export class DoctorDashboardComponent implements OnInit {
     }
   }).subscribe({
     next: (data: any) => {
+      console.log('Complete patient data fetched:', data);
       this.patientData = {
         name: data.fullName || appointment.patientName || 'N/A',
         age: data.age || 0,
-        date: data.appointmentDate ? new Date(data.appointmentDate) : null
+        date: data.appointmentDate ? new Date(data.appointmentDate) : 
+              (appointment.appointmentDate ? new Date(appointment.appointmentDate) : null)
       };
+      console.log('Patient data set:', this.patientData);
     },
     error: (err) => {
       console.error('Error fetching patient details:', err);
+      // Fallback to basic data
+      this.patientData = {
+        name: appointment.patientName || 'N/A',
+        age: 0,
+        date: appointment.appointmentDate ? new Date(appointment.appointmentDate) : null
+      };
     }
   });
 }
@@ -317,13 +320,33 @@ viewPrescription(appointment: AppointmentResponseDto): void {
 
   this.selectedPrescriptionAppointmentId = appointment.appointmentId;
   this.showPrescriptionForm = true;
-  this.prescriptionMode = 'view'; // Set mode for viewing
+  this.prescriptionMode = 'view';
   
-  this.patientData = {
-    name: appointment.patientName || 'N/A',
-    age: 0,
-    date: appointment.appointmentDate ? new Date(appointment.appointmentDate) : null
-  };
+  // Fetch complete patient data
+  this.http.get(`https://localhost:7090/api/Appointments/patient-data`, {
+    params: {
+      appointmentId: appointment.appointmentId.toString(),
+      doctorId: this.doctorId.toString(),
+      userRole: 'Doctor'
+    }
+  }).subscribe({
+    next: (data: any) => {
+      console.log('Complete patient data for view:', data);
+      this.patientData = {
+        name: data.fullName || appointment.patientName || 'N/A',
+        age: data.age || 0,
+        date: data.appointmentDate ? new Date(data.appointmentDate) : null
+      };
+    },
+    error: (err) => {
+      console.error('Error fetching patient details:', err);
+      this.patientData = {
+        name: appointment.patientName || 'N/A',
+        age: 0,
+        date: appointment.appointmentDate ? new Date(appointment.appointmentDate) : null
+      };
+    }
+  });
 }
 
   savePrescription(data: any) {
@@ -332,21 +355,22 @@ viewPrescription(appointment: AppointmentResponseDto): void {
     return;
   }
 
-  // The prescription save endpoint now handles marking appointment as completed
   this.successMessage = data.message || 'Prescription saved and appointment completed successfully!';
   this.showPrescriptionForm = false;
   this.selectedPrescriptionAppointmentId = null;
   this.prescriptionMode = 'create';
   
-  // Reload all appointments to reflect changes (appointment moved from upcoming to previous)
+  // Reload all appointments to reflect changes
   this.loadAllAppointments();
   
   setTimeout(() => this.successMessage = '', 5000);
 }
-  cancelPrescription() {
-    this.showPrescriptionForm = false;
-    this.selectedPrescriptionAppointmentId = null;
-  }
+
+cancelPrescription() {
+  this.showPrescriptionForm = false;
+  this.selectedPrescriptionAppointmentId = null;
+  this.prescriptionMode = 'create';
+}
 
   formatDate(date: string): string {
     return date ? new Date(date).toLocaleString() : 'N/A';
