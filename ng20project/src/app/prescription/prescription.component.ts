@@ -146,25 +146,32 @@ export class PrescriptionComponent implements OnInit {
   }
 
   private loadAvailableMedicines(): void {
-    let spec = this.doctor.info || 'General';
-    if (spec === 'General Medicine') {
+  let spec = this.doctor.info || 'General';
+  
+  // Normalize specialization name
+  if (spec === 'General Medicine') {
     spec = 'General';
   }
-    this.http.get<MedicineDto[]>(`https://localhost:7090/api/Medicines/specialization/${spec}`).subscribe({
-      next: (meds) => {
-        this.availableMedicines = meds;
-        if (!this.medicines.length || this.medicines.every(m => m.medicineID === 0)) {
-          this.medicines = [];
-          this.addMedicine();
-        }
-        this.calculateBill();
-      },
-      error: (err) => {
-        console.error('Error loading available medicines:', err);
-        this.availableMedicines = [];
+  
+  console.log('Loading medicines for specialization:', spec);
+  
+  this.http.get<MedicineDto[]>(`https://localhost:7090/api/Medicines/specialization/${spec}`).subscribe({
+    next: (meds) => {
+      console.log('Medicines loaded:', meds);
+      this.availableMedicines = meds;
+      if (!this.medicines.length || this.medicines.every(m => m.medicineID === 0)) {
+        this.medicines = [];
+        this.addMedicine();
       }
-    });
-  }
+      this.calculateBill();
+    },
+    error: (err) => {
+      console.error('Error loading available medicines:', err);
+      console.error('Specialization used:', spec);
+      this.availableMedicines = [];
+    }
+  });
+}
 
   loadPrescription() {
     if (!this.appointmentId) {
@@ -281,33 +288,51 @@ export class PrescriptionComponent implements OnInit {
   }
 
   savePrescription() {
-    this.calculateBill();
-    this.isEditMode = false;
+  this.calculateBill();
+  
+  const payload = {
+    AppointmentId: this.appointmentId,
+    ChiefComplaints: this.chiefComplaints,
+    PastHistory: this.pastHistory,
+    Examination: this.examination,
+    Advice: this.advice,
+    Diagnosis: this.chiefComplaints, // Use chief complaints as diagnosis
+    InvoiceAmount: this.bill.total, // Pass the total invoice amount
+    Medicines: this.medicines.map(m => ({
+      MedicineID: m.medicineID,
+      Name: m.name,
+      MorningBefore: m.morningBefore,
+      MorningAfter: m.morningAfter,
+      AfternoonBefore: m.afternoonBefore,
+      AfternoonAfter: m.afternoonAfter,
+      NightBefore: m.nightBefore,
+      NightAfter: m.nightAfter,
+      Days: m.days,
+      PricePerTablet: m.pricePerTablet
+    }))
+  };
 
-    const payload = {
-      AppointmentId: this.appointmentId,
-      ChiefComplaints: this.chiefComplaints,
-      PastHistory: this.pastHistory,
-      Examination: this.examination,
-      Advice: this.advice,
-      Diagnosis: '',
-      Medicines: this.medicines.map(m => ({
-        MedicineID: m.medicineID,
-        Name: m.name,
-        MorningBefore: m.morningBefore,
-        MorningAfter: m.morningAfter,
-        AfternoonBefore: m.afternoonBefore,
-        AfternoonAfter: m.afternoonAfter,
-        NightBefore: m.nightBefore,
-        NightAfter: m.nightAfter,
-        Days: m.days,
-        PricePerTablet: m.pricePerTablet
-      })),
-      Bill: { ...this.bill }
-    };
+  console.log('Saving prescription with payload:', payload);
 
-    this.save.emit(payload);
-  }
+  // Call the save-with-completion endpoint
+  this.http.post('https://localhost:7090/api/Prescriptions/save-with-completion', payload).subscribe({
+    next: (response: any) => {
+      console.log('Prescription saved successfully:', response);
+      this.isEditMode = false;
+      this.save.emit({ 
+        success: true, 
+        message: response.message || 'Prescription saved and appointment completed successfully!' 
+      });
+    },
+    error: (err) => {
+      console.error('Error saving prescription:', err);
+      this.save.emit({ 
+        success: false, 
+        message: err.error?.message || 'Failed to save prescription' 
+      });
+    }
+  });
+}
 
   cancelEdit() {
     this.isEditMode = false;

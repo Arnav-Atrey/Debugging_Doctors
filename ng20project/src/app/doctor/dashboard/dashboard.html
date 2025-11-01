@@ -70,33 +70,29 @@
 
     <!-- Upcoming -->
     <div *ngIf="activeTab === 'upcoming'" data-debug="upcoming-tab">
-      <div *ngIf="upcomingAppointments.length === 0" class="alert alert-info">No upcoming appointments.</div>
-      <div class="row" *ngIf="upcomingAppointments.length > 0">
-        <div class="col-md-6 mb-3" *ngFor="let appointment of upcomingAppointments" [attr.data-appointment-id]="appointment.appointmentId">
-          <div class="card border-success">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-start mb-2">
-                <h5 class="card-title mb-0">{{ appointment.patientName || 'N/A' }}</h5>
-                <span class="badge bg-success">Confirmed</span>
-              </div>
-              <p class="card-text">
-                <strong>Date:</strong> {{ formatDate(appointment.appointmentDate) }}<br>
-                <strong>Symptoms:</strong> {{ appointment.symptoms || 'N/A' }}
-              </p>
-              <div class="d-flex gap-2">
-                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#completeModal"
-                        (click)="openCompleteModal(appointment)">
-                  <i class="bi bi-check2-square me-1"></i>Mark as Completed
-                </button>
-                <button class="btn btn-outline-secondary btn-sm" (click)="openPrescriptionForm(appointment)">
-                  <i class="bi bi-file-earmark-medical me-1"></i>Complete with Prescription
-                </button>
-              </div>
-            </div>
+  <div *ngIf="upcomingAppointments.length === 0" class="alert alert-info">No upcoming appointments.</div>
+  <div class="row" *ngIf="upcomingAppointments.length > 0">
+    <div class="col-md-6 mb-3" *ngFor="let appointment of upcomingAppointments" [attr.data-appointment-id]="appointment.appointmentId">
+      <div class="card border-success">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <h5 class="card-title mb-0">{{ appointment.patientName || 'N/A' }}</h5>
+            <span class="badge bg-success">Confirmed</span>
+          </div>
+          <p class="card-text">
+            <strong>Date:</strong> {{ formatDate(appointment.appointmentDate) }}<br>
+            <strong>Symptoms:</strong> {{ appointment.symptoms || 'N/A' }}
+          </p>
+          <div class="d-flex gap-2">
+            <button class="btn btn-primary btn-sm" (click)="openPrescriptionForm(appointment)">
+              <i class="bi bi-file-earmark-medical me-1"></i>Complete with Prescription
+            </button>
           </div>
         </div>
       </div>
     </div>
+  </div>
+</div>
 
     <!-- Previous -->
     <div *ngIf="activeTab === 'previous'" data-debug="previous-tab">

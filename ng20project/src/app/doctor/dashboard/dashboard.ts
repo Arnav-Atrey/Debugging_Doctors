@@ -332,17 +332,17 @@ viewPrescription(appointment: AppointmentResponseDto): void {
     return;
   }
 
+  // The prescription save endpoint now handles marking appointment as completed
   this.successMessage = data.message || 'Prescription saved and appointment completed successfully!';
   this.showPrescriptionForm = false;
   this.selectedPrescriptionAppointmentId = null;
   this.prescriptionMode = 'create';
   
-  // Reload all appointments to reflect changes
+  // Reload all appointments to reflect changes (appointment moved from upcoming to previous)
   this.loadAllAppointments();
   
   setTimeout(() => this.successMessage = '', 5000);
 }
-
   cancelPrescription() {
     this.showPrescriptionForm = false;
     this.selectedPrescriptionAppointmentId = null;

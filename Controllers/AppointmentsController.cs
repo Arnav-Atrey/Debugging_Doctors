@@ -27,24 +27,47 @@ namespace Hospital_Management_system.Controllers
         [HttpGet("patient-data")]
         public async Task<ActionResult<PatientDetailsDto>> GetPatientDataForApprovedAppointment(
     int appointmentId,
-    int doctorId,  // Changed from userId
+    int doctorId,
     string userRole)
         {
             try
             {
-                var result = await _context.Database
-                    .SqlQueryRaw<PatientDetailsDto>(
-                        "EXEC GetPatientDataForApprovedAppointment @AppointmentId, @DoctorId, @UserRole",
-                        new SqlParameter("@AppointmentId", appointmentId),
-                        new SqlParameter("@DoctorId", doctorId),  // Changed parameter name
-                        new SqlParameter("@UserRole", userRole)
-                    )
-                    .ToListAsync();
+                var appointment = await _context.Appointments
+                    .Include(a => a.Patient)
+                    .Where(a => a.AppointmentId == appointmentId && a.DoctorId == doctorId)
+                    .FirstOrDefaultAsync();
 
-                if (result == null || !result.Any())
-                    return NotFound(new { message = "No data found or access denied." });
+                if (appointment == null)
+                    return NotFound(new { message = "Appointment not found or access denied." });
 
-                return Ok(result.First());
+                var patient = appointment.Patient;
+
+                // Calculate age from DOB
+                int age = 0;
+                if (patient.Dob.HasValue)
+                {
+                    var today = DateOnly.FromDateTime(DateTime.Today);
+                    age = today.Year - patient.Dob.Value.Year;
+                    if (patient.Dob.Value > today.AddYears(-age))
+                        age--;
+                }
+
+                var result = new PatientDetailsDto
+                {
+                    PatientId = patient.PatientId,
+                    FullName = patient.FullName,
+                    Aadhaar_no = patient.Aadhaar_no,
+                    ContactNo = patient.ContactNo,
+                    Dob = patient.Dob,
+                    Gender = patient.Gender,
+                    Address = patient.Address,
+                    Age = age,
+                    AppointmentId = appointment.AppointmentId,
+                    AppointmentDate = appointment.AppointmentDate,
+                    Symptoms = appointment.Symptoms
+                };
+
+                return Ok(result);
             }
             catch (Exception ex)
             {
