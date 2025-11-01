@@ -109,32 +109,26 @@ getAppointmentDate(dateString: string): Date | null {
   viewPrescription(appointment: AppointmentResponseDto): void {
     console.log('Viewing prescription for appointment:', appointment);
     
-    // Fetch complete patient data including age
-    this.http.get(`https://localhost:7090/api/Patients/${this.patientId}`).subscribe({
+    // Use the patient-data endpoint which returns complete patient info including age
+    this.http.get(`https://localhost:7090/api/Appointments/patient-data`, {
+      params: {
+        appointmentId: appointment.appointmentId.toString(),
+        doctorId: appointment.doctorId.toString(),
+        userRole: 'Patient'
+      }
+    }).subscribe({
       next: (patientData: any) => {
-        console.log('Patient data fetched:', patientData);
+        console.log('Complete patient data fetched:', patientData);
         
-        // Calculate age from DOB
-        let age = 0;
-        if (patientData.dob) {
-          const dob = new Date(patientData.dob);
-          const today = new Date();
-          age = today.getFullYear() - dob.getFullYear();
-          const monthDiff = today.getMonth() - dob.getMonth();
-          if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-            age--;
-          }
-        }
-
-        // Fetch doctor data
+        // Fetch doctor data to get specialisation
         this.http.get(`https://localhost:7090/api/Doctors/${appointment.doctorId}`).subscribe({
           next: (doctorData: any) => {
             console.log('Doctor data fetched:', doctorData);
             
             this.selectedAppointmentForPrescription = {
               appointmentId: appointment.appointmentId,
-              patientName: appointment.patientName,
-              age: age,
+              patientName: patientData.fullName || appointment.patientName,
+              age: patientData.age || 0, // Age is calculated on backend
               appointmentDate: appointment.appointmentDate,
               doctorName: doctorData.fullName || appointment.doctorName,
               doctorSpecialization: doctorData.specialisation || appointment.specialisation,
@@ -149,8 +143,8 @@ getAppointmentDate(dateString: string): Date | null {
             // Fallback to appointment data
             this.selectedAppointmentForPrescription = {
               appointmentId: appointment.appointmentId,
-              patientName: appointment.patientName,
-              age: age,
+              patientName: patientData.fullName || appointment.patientName,
+              age: patientData.age || 0,
               appointmentDate: appointment.appointmentDate,
               doctorName: appointment.doctorName,
               doctorSpecialization: appointment.specialisation,
@@ -162,11 +156,17 @@ getAppointmentDate(dateString: string): Date | null {
       },
       error: (err) => {
         console.error('Error fetching patient data:', err);
-        // Fallback to basic appointment data
+        // Fallback - calculate age from DOB if available
+        let calculatedAge = 0;
+        if (appointment.appointmentDate) {
+          // This is a fallback; ideally backend should provide age
+          calculatedAge = 0; // We don't have DOB in appointment response
+        }
+        
         this.selectedAppointmentForPrescription = {
           appointmentId: appointment.appointmentId,
           patientName: appointment.patientName,
-          age: 0,
+          age: calculatedAge,
           appointmentDate: appointment.appointmentDate,
           doctorName: appointment.doctorName,
           doctorSpecialization: appointment.specialisation,
