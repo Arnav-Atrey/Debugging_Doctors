@@ -1,11 +1,353 @@
-textarea {
+/* prescription.css – Professional Prescription Template */
+:host {
+  display: block;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f8f9fa;
+  padding: 1.5rem;
+  min-height: 100vh;
+}
+
+/* ---------- Container ---------- */
+#prescription {
+  max-width: 900px;
+  margin: 0 auto;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  animation: fadeInUp 0.6s ease-out;
+  page-break-inside: avoid;
+}
+
+/* ---------- Header ---------- */
+#prescription > div:first-child {
+  padding: 1.5rem 2rem;
+  background: linear-gradient(135deg, #4facfe, #00c6ff);
+  color: white;
+  border-radius: 16px 16px 0 0;
+}
+
+#prescription img {
+  filter: brightness(0) invert(1);
+}
+
+#prescription h3 {
+  font-weight: 700;
+  font-size: 1.8rem;
+  margin: 0;
+  background: linear-gradient(135deg, #fff, #e0f7fa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 6s ease infinite;
+  background-size: 200% 200%;
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+#prescription .text-end small {
+  font-size: 0.85rem;
+  opacity: 0.9;
+  line-height: 1.4;
+}
+
+/* ---------- HR & Section Spacing ---------- */
+hr {
+  border: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #4facfe, transparent);
+  margin: 1.5rem 0;
+}
+
+/* ---------- Patient Info ---------- */
+.row.mb-3 small {
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+.row.mb-3 strong {
+  color: #2c3e50;
+}
+
+/* ---------- Section Labels ---------- */
+.form-label.fw-bold {
+  color: #2c3e50;
+  font-size: 1.05rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 2px solid #4facfe;
+  padding-bottom: 0.25rem;
+  display: inline-block;
+}
+
+/* ---------- Textareas ---------- */
+textarea.form-control {
+  border-radius: 10px;
+  border: 1.8px solid #ced4da;
+  padding: 0.75rem;
+  font-size: 0.95rem;
+  background-color: #f8f9fa;
+  transition: all 0.3s ease;
   resize: vertical;
-  min-height: 80px;
 }
-input[type="number"] {
-  width: 60px;
-  margin: auto;
+
+textarea.form-control:focus {
+  border-color: #4facfe;
+  box-shadow: 0 0 0 0.2rem rgba(79, 172, 254, 0.25);
+  background-color: #fff;
 }
-.table th, .table td {
+
+textarea.form-control[readonly] {
+  background-color: #e9ecef;
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+
+/* ---------- Medicines Table ---------- */
+.table-responsive {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.table {
+  margin-bottom: 0;
+  font-size: 0.9rem;
+}
+
+.table thead {
+  background: linear-gradient(135deg, #4facfe, #00c6ff);
+  color: white;
+}
+
+.table thead th {
+  border: none;
+  font-weight: 600;
+  text-align: center;
+  font-size: 0.85rem;
+  padding: 0.75rem 0.5rem;
+}
+
+.table tbody tr {
+  transition: background 0.2s ease;
+}
+
+.table tbody tr:nth-child(even) {
+  background-color: #f8f9fa;
+}
+
+.table tbody tr:hover {
+  background-color: #e3f2fd !important;
+}
+
+.table tbody td {
   vertical-align: middle;
+  padding: 0.5rem;
+}
+
+/* Input & Select in Table */
+.table .form-control-sm,
+.table select.form-control-sm {
+  font-size: 0.85rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+  border: 1.5px solid #ced4da;
+  background-color: white;
+}
+
+.table .form-control-sm:focus,
+.table select.form-control-sm:focus {
+  border-color: #4facfe;
+  box-shadow: 0 0 0 0.15rem rgba(79, 172, 254, 0.25);
+}
+
+.table .form-control-sm[readonly],
+.table select.form-control-sm:disabled {
+  background-color: #e9ecef;
+  opacity: 0.7;
+}
+
+/* Remove Button */
+.table .btn-danger.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  border-radius: 50px;
+}
+
+/* ---------- Add Medicine Button ---------- */
+.btn-outline-primary.btn-sm {
+  border-radius: 50px;
+  font-size: 0.85rem;
+  padding: 0.4rem 1rem;
+  transition: all 0.3s ease;
+}
+
+.btn-outline-primary.btn-sm:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(79, 172, 254, 0.2);
+}
+
+small.text-warning {
+  font-style: italic;
+}
+
+/* ---------- Bill Summary ---------- */
+.border.p-3.bg-light {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef) !important;
+  border: 1px dashed #4facfe !important;
+  border-radius: 12px;
+}
+
+.border.p-3 h5 {
+  color: #2c3e50;
+  font-weight: 700;
+  background: linear-gradient(135deg, #4facfe, #00c6ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.table-sm td {
+  padding: 0.4rem 0;
+  font-size: 0.95rem;
+}
+
+.table-sm .text-end {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.table-sm tr.border-top td {
+  padding-top: 0.75rem;
+  border-top: 1.5px solid #4facfe !important;
+}
+
+.table-sm tr.fw-bold.text-primary td {
+  font-size: 1.1rem;
+  color: #2c3e50 !important;
+}
+
+/* ---------- Footer ---------- */
+.text-center.text-muted {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px dashed #dee2e6;
+}
+
+.text-center.text-muted p {
+  margin: 0.25rem 0;
+}
+
+/* ---------- Action Buttons ---------- */
+.mt-4.d-flex {
+  padding: 1rem 2rem;
+  background: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+  border-radius: 0 0 16px 16px;
+}
+
+.btn {
+  border-radius: 50px;
+  font-weight: 500;
+  padding: 0.6rem 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  border: none;
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(40, 167, 69, 0.4);
+}
+
+.btn-secondary {
+  background: #6c757d;
+  border: none;
+}
+
+.btn-secondary:hover {
+  background: #5a6268;
+  transform: translateY(-2px);
+}
+
+.btn-outline-primary,
+.btn-outline-dark {
+  font-weight: 500;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-dark:hover {
+  transform: translateY(-2px);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+  #prescription {
+    padding: 1rem;
+    border-radius: 12px;
+  }
+  .table-responsive {
+    font-size: 0.8rem;
+  }
+  .table thead th,
+  .table tbody td {
+    padding: 0.4rem 0.3rem;
+  }
+  .table .form-control-sm {
+    font-size: 0.75rem;
+    padding: 0.25rem;
+  }
+  .btn {
+    font-size: 0.85rem;
+    padding: 0.5rem 1rem;
+  }
+}
+
+/* ---------- Print Styles (Clean & Valid) ---------- */
+@media print {
+  :host, body {
+    background: white !important;
+  }
+  #prescription {
+    box-shadow: none;
+    border: 1px solid #000;
+    max-width: 100%;
+    page-break-inside: avoid;
+  }
+  .mt-4.d-flex {
+    display: none !important;
+  }
+  .btn, .btn-close {
+    display: none !important;
+  }
+  textarea[readonly] {
+    border: none !important;
+    background: transparent !important;
+    resize: none;
+  }
+  .table {
+    font-size: 10pt;
+  }
+  .table thead {
+    background: #f1f1f1 !important;
+    color: #000 !important;
+  }
+  hr {
+    background: #000 !important;
+  }
+}
+
+/* ---------- Animations ---------- */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
 }

@@ -1,71 +1,291 @@
+/* patient-details.css – Patient Details Form */
+:host {
+  display: block;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 2rem 1rem;
+}
+
+/* ---------- Layout ---------- */
 .container {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .card {
-  border-radius: 15px;
   border: none;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  transition: all 0.4s ease;
+  animation: fadeInUp 0.6s ease-out;
 }
 
+.card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+}
+
+.card-body {
+  padding: 2.5rem;
+}
+
+/* ---------- Animated Title ---------- */
 .card-title {
-  color: #333;
-  font-weight: 600;
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: #2c3e50;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(135deg, #4facfe, #00c6ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 6s ease infinite, fadeInDown 0.6s ease-out;
+  background-size: 200% 200%;
 }
 
-.form-label {
-  font-weight: 500;
-  color: #555;
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
-.text-danger {
-  color: #dc3545;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+/* ---------- Alerts ---------- */
+.alert {
   border: none;
-  padding: 10px 20px;
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
   font-weight: 500;
-  transition: transform 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  animation: slideDown 0.4s ease-out;
+  font-size: 0.95rem;
 }
 
-.btn-primary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+.alert-success {
+  background: linear-gradient(135deg, #d4edda, #c3e6cb);
+  color: #155724;
+  border-left: 5px solid #28a745;
 }
 
-.btn-primary:disabled {
-  background: #cccccc;
-  cursor: not-allowed;
+.alert-danger {
+  background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+  color: #721c24;
+  border-left: 5px solid #dc3545;
 }
 
-.btn-outline-secondary {
-  border-color: #6c757d;
-  color: #6c757d;
-  transition: all 0.2s;
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  opacity: 0.6;
+  transition: opacity 0.2s;
 }
 
-.btn-outline-secondary:hover {
-  background-color: #6c757d;
-  color: white;
+.btn-close:hover {
+  opacity: 1;
+}
+
+/* ---------- Form Labels ---------- */
+.form-label {
+  font-weight: 600;
+  color: #2d3436;
+  margin-bottom: 0.6rem;
+  font-size: 0.95rem;
+}
+
+.form-label .text-danger {
+  font-weight: 700;
+}
+
+/* ---------- Form Controls ---------- */
+.form-control,
+.form-select,
+textarea.form-control {
+  border-radius: 14px;
+  border: 1.8px solid #dfe6e9;
+  padding: 0.85rem 1.1rem;
+  font-size: 1rem;
+  background-color: #f8f9fa;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.03);
 }
 
 .form-control:focus,
 .form-select:focus,
-textarea:focus {
-  border-color: #667eea;
-  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+textarea.form-control:focus {
+  border-color: #4facfe;
+  background-color: #fff;
+  box-shadow: 0 0 0 0.25rem rgba(79, 172, 254, 0.25);
+  outline: none;
 }
 
-textarea.form-control {
-  resize: vertical;
+.form-control:hover:not(:focus),
+.form-select:hover:not(:focus),
+textarea.form-control:hover:not(:focus) {
+  border-color: #74b9ff;
 }
 
-.alert {
-  border-radius: 10px;
+.form-control::placeholder,
+textarea::placeholder {
+  color: #b2bec3;
+  font-style: italic;
 }
 
-.text-muted {
+/* Invalid State */
+.form-control.is-invalid,
+.form-select.is-invalid,
+textarea.is-invalid {
+  border-color: #e74c3c;
+  background-color: #fdf2f2;
+}
+
+.form-control.is-invalid:focus,
+.form-select.is-invalid:focus,
+textarea.is-invalid:focus {
+  box-shadow: 0 0 0 0.25rem rgba(231, 76, 60, 0.25);
+}
+
+.invalid-feedback {
+  color: #e74c3c;
   font-size: 0.875rem;
+  margin-top: 0.4rem;
+  font-weight: 500;
+}
+
+/* ---------- Submit Button ---------- */
+.btn-primary {
+  background: linear-gradient(135deg, #4facfe 0%, #00c6ff 100%);
+  border: none;
+  border-radius: 50px;
+  padding: 0.85rem 1.5rem;
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: white;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(79, 172, 254, 0.3);
+  width: 100%;
+  margin-bottom: 0.75rem;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(79, 172, 254, 0.4);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  background: #b2bec3;
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* ---------- Skip Button (Uncomment if needed) ---------- */
+.btn-outline-secondary {
+  border-color: #95a5a6;
+  color: #95a5a6;
+  border-radius: 50px;
+  padding: 0.85rem 1.5rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-outline-secondary:hover {
+  background: #95a5a6;
+  color: white;
+  transform: translateY(-2px);
+}
+
+/* ---------- Grid & Footer ---------- */
+.d-grid.gap-2 {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.text-muted.small {
+  font-size: 0.85rem;
+  color: #636e72 !important;
+  margin-top: 1.5rem;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 576px) {
+  :host {
+    padding: 1rem 0.5rem;
+  }
+
+  .card-body {
+    padding: 2rem 1.5rem;
+  }
+
+  .card-title {
+    font-size: 1.6rem;
+  }
+}
+
+/* ---------- Animations ---------- */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Pulse effect on valid submit button */
+.btn-primary:enabled {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary:enabled::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+}
+
+.btn-primary:enabled:hover::after {
+  width: 300px;
+  height: 300px;
 }
